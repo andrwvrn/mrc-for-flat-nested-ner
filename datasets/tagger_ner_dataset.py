@@ -136,5 +136,3 @@ class TaggerNERDataset(Dataset):
                 torch.tensor(attention_mask, dtype=torch.long),
                 torch.tensor(wordpiece_label_idx_lst, dtype=torch.long),
                 torch.tensor(is_wordpiece_mask, dtype=torch.long)]
-
-

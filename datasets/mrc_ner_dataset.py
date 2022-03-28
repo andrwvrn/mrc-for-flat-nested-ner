@@ -19,8 +19,8 @@ class MRCNERDataset(Dataset):
         possible_only: if True, only use possible samples that contain answer for the query/context
         is_chinese: is chinese dataset
     """
-    def __init__(self, json_path, tokenizer: BertWordPieceTokenizer, max_length: int = 512, possible_only=False,
-                 is_chinese=False, pad_to_maxlen=False):
+    def __init__(self, json_path, tokenizer: BertWordPieceTokenizer, max_length: int = 512, possible_only: bool = False,
+                 is_chinese: bool = False, pad_to_maxlen: bool = False):
         self.all_data = json.load(open(json_path, encoding="utf-8"))
         self.tokenizer = tokenizer
         self.max_length = max_length
@@ -43,7 +43,7 @@ class MRCNERDataset(Dataset):
             tokens: tokens of query + context, [seq_len]
             token_type_ids: token type ids, 0 for query, 1 for context, [seq_len]
             start_labels: start labels of NER in tokens, [seq_len]
-            end_labels: end labelsof NER in tokens, [seq_len]
+            end_labels: end labels of NER in tokens, [seq_len]
             label_mask: label mask, 1 for counting into loss, 0 for ignoring. [seq_len]
             match_labels: match labels, [seq_len, seq_len]
             sample_idx: sample id
@@ -228,7 +228,7 @@ def run_dataset():
 
             print("!!!"*20)
             for start, end in zip(tmp_start_position, tmp_end_position):
-                print(str(sample_idx.item()), str(label_idx.item()) + "\t" + tokenizer.decode(tokens[start: end + 1]))
+                print(str(sample_idx.item()), str(label_idx.item()) + "\t" + tokenizer.decode(tokens[start: end+1]))
 
 
 if __name__ == '__main__':
