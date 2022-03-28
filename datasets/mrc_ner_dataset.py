@@ -69,7 +69,7 @@ class MRCNERDataset(Dataset):
             # add space offsets
             words = context.split()
             start_positions = [x + sum([len(w) for w in words[:x]]) for x in start_positions]
-            end_positions = [x + sum([len(w) for w in words[:x + 1]]) for x in end_positions]
+            end_positions = [x + sum([len(w) for w in words[:x+1]]) for x in end_positions]
 
         query_context_tokens = tokenizer.encode(query, context, add_special_tokens=True)
         tokens = query_context_tokens.ids
@@ -124,12 +124,12 @@ class MRCNERDataset(Dataset):
                       for idx in range(len(tokens))]
 
         # truncate
-        tokens = tokens[: self.max_length]
-        type_ids = type_ids[: self.max_length]
-        start_labels = start_labels[: self.max_length]
-        end_labels = end_labels[: self.max_length]
-        start_label_mask = start_label_mask[: self.max_length]
-        end_label_mask = end_label_mask[: self.max_length]
+        tokens = tokens[:self.max_length]
+        type_ids = type_ids[:self.max_length]
+        start_labels = start_labels[:self.max_length]
+        end_labels = end_labels[:self.max_length]
+        start_label_mask = start_label_mask[:self.max_length]
+        end_label_mask = end_label_mask[:self.max_length]
 
         # make sure last token is [SEP]
         sep_token = tokenizer.token_to_id("[SEP]")
