@@ -202,12 +202,14 @@ def run_dataset():
                             collate_fn=collate_to_max_length)
 
     for batch in dataloader:
+        print("----------------------- BATCH START -----------------------")
         for tokens, token_type_ids, start_labels, end_labels, start_label_mask, end_label_mask, match_labels, sample_idx, label_idx in zip(*batch):
             tokens = tokens.tolist()
             start_positions, end_positions = torch.where(match_labels > 0)
             start_positions = start_positions.tolist()
             end_positions = end_positions.tolist()
-            print(start_labels.numpy().tolist())
+            print('start_labels:', start_labels.numpy().tolist())
+            print('start_label_mask:', start_label_mask.numpy().tolist())
 
             tmp_start_position = []
             for tmp_idx, tmp_label in enumerate(start_labels.numpy().tolist()):
