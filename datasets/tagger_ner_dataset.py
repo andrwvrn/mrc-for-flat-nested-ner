@@ -75,7 +75,7 @@ class TaggerNERDataset(Dataset):
     """
     MRC NER Dataset
     Args:
-        data_path: path to Conll-style named entity dadta file.
+        data_path: path to Conll-style named entity data file.
         tokenizer: BertTokenizer
         max_length: int, max length of query+context
         is_chinese: is chinese dataset
@@ -83,8 +83,8 @@ class TaggerNERDataset(Dataset):
         https://github.com/huggingface/transformers/blob/143738214cb83e471f3a43652617c8881370342c/examples/pytorch/token-classification/run_ner.py#L362
         https://github.com/huggingface/transformers/blob/143738214cb83e471f3a43652617c8881370342c/src/transformers/models/bert/modeling_bert.py#L1739
     """
-    def __init__(self, data_path, tokenizer: AutoTokenizer, dataset_signature, max_length: int = 512,
-                 is_chinese=False, pad_to_maxlen=False, tagging_schema="BMESO", ):
+    def __init__(self, data_path: str, tokenizer: AutoTokenizer, dataset_signature: str, max_length: int = 512,
+                 is_chinese: bool = False, pad_to_maxlen: bool = False, tagging_schema: str = "BMESO"):
         self.all_data = load_data_in_conll(data_path)
         self.tokenizer = tokenizer
         self.max_length = max_length
