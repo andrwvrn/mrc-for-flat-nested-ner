@@ -13,6 +13,7 @@ class BertQueryNerConfig(BertConfig):
         self.classifier_intermediate_hidden_size = kwargs.get("classifier_intermediate_hidden_size", 1024)
         self.classifier_act_func = kwargs.get("classifier_act_func", "gelu")
 
+
 class BertTaggerConfig(BertConfig):
     def __init__(self, **kwargs):
         super(BertTaggerConfig, self).__init__(**kwargs)
