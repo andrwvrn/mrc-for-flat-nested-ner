@@ -40,16 +40,16 @@ class BertLabeling(pl.LightningModule):
     ):
         """Initialize a model, tokenizer and config."""
         super().__init__()
-        format = '%(asctime)s - %(name)s - %(message)s'
+        frmt = '%(asctime)s - %(name)s - %(message)s'
         if isinstance(args, argparse.Namespace):
             self.save_hyperparameters(args)
             self.args = args
-            logging.basicConfig(format=format, filename=os.path.join(self.args.default_root_dir, "eval_result_log.txt"), level=logging.INFO)
+            logging.basicConfig(format=frmt, filename=os.path.join(self.args.default_root_dir, "eval_result_log.txt"), level=logging.INFO)
         else:
             # eval mode
             TmpArgs = namedtuple("tmp_args", field_names=list(args.keys()))
             self.args = args = TmpArgs(**args)
-            logging.basicConfig(format=format, filename=os.path.join(self.args.default_root_dir, "eval_test.txt"), level=logging.INFO)
+            logging.basicConfig(format=frmt, filename=os.path.join(self.args.default_root_dir, "eval_test.txt"), level=logging.INFO)
 
         self.bert_dir = args.bert_config_dir
         self.data_dir = self.args.data_dir

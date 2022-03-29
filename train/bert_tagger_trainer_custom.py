@@ -39,22 +39,22 @@ class BertSequenceLabeling(pl.LightningModule):
     ):
         """Initialize a model, tokenizer and config."""
         super().__init__()
-        format = '%(asctime)s - %(name)s - %(message)s'
+        frmt = '%(asctime)s - %(name)s - %(message)s'
         if isinstance(args, argparse.Namespace):
             self.save_hyperparameters(args)
             self.args = args
-            logging.basicConfig(format=format, filename=os.path.join(self.args.output_dir, "eval_result_log.txt"), level=logging.INFO)
+            logging.basicConfig(format=frmt, filename=os.path.join(self.args.output_dir, "eval_result_log.txt"), level=logging.INFO)
         else:
             # eval mode
             TmpArgs = namedtuple("tmp_args", field_names=list(args.keys()))
             self.args = args = TmpArgs(**args)
-            logging.basicConfig(format=format, filename=os.path.join(self.args.output_dir, "eval_test.txt"), level=logging.INFO)
+            logging.basicConfig(format=frmt, filename=os.path.join(self.args.output_dir, "eval_test.txt"), level=logging.INFO)
 
         self.bert_dir = args.bert_config_dir
         self.data_dir = self.args.data_dir
         self.task_labels = get_labels(self.args.data_sign)
         self.num_labels = len(self.task_labels)
-        self.task_idx2label = {label_idx : label_item for label_idx, label_item in enumerate(get_labels(self.args.data_sign))}
+        self.task_idx2label = {label_idx: label_item for label_idx, label_item in enumerate(get_labels(self.args.data_sign))}
         bert_config = BertTaggerConfig.from_pretrained(args.bert_config_dir,
                                                        hidden_dropout_prob=args.bert_dropout,
                                                        attention_probs_dropout_prob=args.bert_dropout,
