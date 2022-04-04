@@ -8,14 +8,15 @@ from utils.bmes_decode import bmes_decode
 import json
 
 
-def convert_file(input_file, output_file, tag2query_file):
+def convert_file(input_file: str, output_file: str, tag2query_file: str):
     """
-    Convert MSRA raw data to MRC format
+    Converts MSRA raw data to MRC format
     """
     origin_count = 0
     new_count = 0
     tag2query = json.load(open(tag2query_file))
     mrc_samples = []
+
     with open(input_file) as fin:
         for line in fin:
             line = line.strip()

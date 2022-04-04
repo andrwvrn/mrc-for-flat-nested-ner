@@ -7,9 +7,9 @@ import os
 import json
 
 
-def convert_file(input_file, output_file, tag2query_file):
+def convert_file(input_file: str, output_file: str, tag2query_file: str):
     """
-    Convert GENIA data to MRC format
+    Converts GENIA data to MRC format
     """
     all_data = json.load(open(input_file))
     tag2query = json.load(open(tag2query_file))
