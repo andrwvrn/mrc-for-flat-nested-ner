@@ -3,6 +3,7 @@
 
 # file: msra2mrc.py
 
+import argparse
 import os
 from utils.bmes_decode import bmes_decode
 import json
@@ -37,18 +38,27 @@ def convert_file(input_file: str, output_file: str, tag2query_file: str):
                 new_count += 1
 
     json.dump(mrc_samples, open(output_file, "w"), ensure_ascii=False, sort_keys=True, indent=2)
-    print(f"Convert {origin_count} samples to {new_count} samples and save to {output_file}")
+    print(f"Converted {origin_count} samples to {new_count} samples and saved to {output_file}")
 
 
 def main():
-    msra_raw_dir = "/mnt/mrc/zh_msra_yuxian"
-    msra_mrc_dir = "/mnt/mrc/zh_msra_yuxian/mrc_format"
-    tag2query_file = "queries/zh_msra.json"
-    os.makedirs(msra_mrc_dir, exist_ok=True)
+    parser = argparse.ArgumentParser(description="convert jsonlines to mrc")
+    parser.add_argument("--convert_from_dir", type=str, required=True)
+    parser.add_argument("--convert_to_dir", type=str, required=True)
+    parser.add_argument("--t2q_filename", type=str, required=True)
+
+    args = parser.parse_args()
+
+    os.makedirs(args.convert_to_dir, exist_ok=True)
+
     for phase in ["train", "dev", "test"]:
-        old_file = os.path.join(msra_raw_dir, f"{phase}.tsv")
-        new_file = os.path.join(msra_mrc_dir, f"mrc-ner.{phase}")
-        convert_file(old_file, new_file, tag2query_file)
+        old_file = os.path.join(args.convert_from_dir, f"{phase}.tsv")
+        new_file = os.path.join(args.convert_to_dir, f"mrc-ner.{phase}")
+        try:
+            convert_file(old_file, new_file, args.t2q_filename)
+        except FileNotFoundError as e:
+            print(e)
+            continue
 
 
 if __name__ == '__main__':
