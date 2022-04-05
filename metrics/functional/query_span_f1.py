@@ -10,7 +10,8 @@ from utils.bmes_decode import bmes_decode
 
 def query_span_f1(start_preds, end_preds, match_logits, start_label_mask, end_label_mask, match_labels, flat=False):
     """
-    Compute span f1 according to query-based model output
+    Calculates span f1 according to query-based model output
+
     Args:
         start_preds: [bsz, seq_len]
         end_preds: [bsz, seq_len]
@@ -33,32 +34,43 @@ def query_span_f1(start_preds, end_preds, match_logits, start_label_mask, end_la
     # [bsz, seq_len]
     end_preds = end_preds.bool()
 
-    match_preds = (match_preds
-                   & start_preds.unsqueeze(-1).expand(-1, -1, seq_len)
-                   & end_preds.unsqueeze(1).expand(-1, seq_len, -1))
-    match_label_mask = (start_label_mask.unsqueeze(-1).expand(-1, -1, seq_len)
-                        & end_label_mask.unsqueeze(1).expand(-1, seq_len, -1))
+    match_preds = (match_preds &
+                   start_preds.unsqueeze(-1).expand(-1, -1, seq_len) &
+                   end_preds.unsqueeze(1).expand(-1, seq_len, -1))
+
+    match_label_mask = (start_label_mask.unsqueeze(-1).expand(-1, -1, seq_len) &
+                        end_label_mask.unsqueeze(1).expand(-1, seq_len, -1))
+
     match_label_mask = torch.triu(match_label_mask, 0)  # start should be less or equal to end
     match_preds = match_label_mask & match_preds
 
     tp = (match_labels & match_preds).long().sum()
     fp = (~match_labels & match_preds).long().sum()
     fn = (match_labels & ~match_preds).long().sum()
+
     return torch.stack([tp, fp, fn])
 
 
 def extract_nested_spans(start_preds, end_preds, match_preds, start_label_mask, end_label_mask, pseudo_tag="TAG"):
     start_label_mask = start_label_mask.bool()
     end_label_mask = end_label_mask.bool()
+
     bsz, seq_len = start_label_mask.size()
+
     start_preds = start_preds.bool()
     end_preds = end_preds.bool()
 
-    match_preds = (match_preds & start_preds.unsqueeze(-1).expand(-1, -1, seq_len) & end_preds.unsqueeze(1).expand(-1, seq_len, -1))
-    match_label_mask = (start_label_mask.unsqueeze(-1).expand(-1, -1, seq_len) & end_label_mask.unsqueeze(1).expand(-1, seq_len, -1))
+    match_preds = (match_preds &
+                   start_preds.unsqueeze(-1).expand(-1, -1, seq_len) &
+                   end_preds.unsqueeze(1).expand(-1, seq_len, -1))
+
+    match_label_mask = (start_label_mask.unsqueeze(-1).expand(-1, -1, seq_len) &
+                        end_label_mask.unsqueeze(1).expand(-1, seq_len, -1))
+
     match_label_mask = torch.triu(match_label_mask, 0)  # start should be less or equal to end
     match_preds = match_label_mask & match_preds
     match_pos_pairs = np.transpose(np.nonzero(match_preds.numpy())).tolist()
+
     return [(pos[1], pos[2], pseudo_tag) for pos in match_pos_pairs]
 
 
@@ -73,11 +85,11 @@ def extract_flat_spans(start_pred, end_pred, match_pred, label_mask, pseudo_tag 
     Returns:
         tags: list of tuple (start, end)
     Examples:
-        >>> start_pred = [0, 1]
-        >>> end_pred = [0, 1]
-        >>> match_pred = [[0, 0], [0, 1]]
-        >>> label_mask = [1, 1]
-        >>> extract_flat_spans(start_pred, end_pred, match_pred, label_mask)
+        >> start_pred = [0, 1]
+        >> end_pred = [0, 1]
+        >> match_pred = [[0, 0], [0, 1]]
+        >> label_mask = [1, 1]
+        >> extract_flat_spans(start_pred, end_pred, match_pred, label_mask)
         [(1, 2)]
     """
     pseudo_input = "a"
@@ -111,18 +123,21 @@ def extract_flat_spans(start_pred, end_pred, match_pred, label_mask, pseudo_tag 
 
 def remove_overlap(spans):
     """
-    remove overlapped spans greedily for flat-ner
+    Removes overlapped spans greedily for flat-ner
+
     Args:
-        spans: list of tuple (start, end), which means [start, end] is a ner-span
+        spans: list of tuples (start, end), which means [start, end] is a ner-span
     Returns:
         spans without overlap
     """
     output = []
     occupied = set()
+
     for start, end in spans:
         if any(x for x in range(start, end+1)) in occupied:
             continue
         output.append((start, end))
         for x in range(start, end + 1):
             occupied.add(x)
+
     return output
