@@ -3,6 +3,7 @@
 
 # file: genia2mrc.py
 
+import argparse
 import os
 import json
 
@@ -39,14 +40,23 @@ def convert_file(input_file: str, output_file: str, tag2query_file: str):
 
 
 def main():
-    genia_raw_dir = "/mnt/mrc/genia/genia_raw"
-    genia_mrc_dir = "/mnt/mrc/genia/genia_raw/mrc_format"
-    tag2query_file = "queries/genia.json"
-    os.makedirs(genia_mrc_dir, exist_ok=True)
+    parser = argparse.ArgumentParser(description="convert jsonlines to mrc")
+    parser.add_argument("--convert_from_dir", type=str, required=True)
+    parser.add_argument("--convert_to_dir", type=str, required=True)
+    parser.add_argument("--t2q_filename", type=str, required=True)
+
+    args = parser.parse_args()
+
+    os.makedirs(args.convert_to_dir, exist_ok=True)
+
     for phase in ["train", "dev", "test"]:
-        old_file = os.path.join(genia_raw_dir, f"{phase}.genia.json")
-        new_file = os.path.join(genia_mrc_dir, f"mrc-ner.{phase}")
-        convert_file(old_file, new_file, tag2query_file)
+        old_file = os.path.join(args.convert_from_dir, f"{phase}.genia.json")
+        new_file = os.path.join(args.convert_to_dir, f"mrc-ner.{phase}")
+        try:
+            convert_file(old_file, new_file, args.t2q_filename)
+        except FileNotFoundError as e:
+            print(e)
+            continue
 
 
 if __name__ == '__main__':
