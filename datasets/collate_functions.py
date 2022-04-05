@@ -9,7 +9,8 @@ from typing import List
 
 def tagger_collate_to_max_length(batch: List[List[torch.Tensor]]) -> List[torch.Tensor]:
     """
-    pad to maximum length of this batch
+    Pad to the maximum length of the batch
+
     Args:
         batch: a batch of samples, each contains a list of field data(Tensor):
             tokens, token_type_ids, attention_mask, wordpiece_label_idx_lst
@@ -50,7 +51,8 @@ def tagger_collate_to_max_length(batch: List[List[torch.Tensor]]) -> List[torch.
 
 def collate_to_max_length(batch: List[List[torch.Tensor]]) -> List[torch.Tensor]:
     """
-    pad to maximum length of this batch
+    Pad to the maximum length of the batch
+
     Args:
         batch: a batch of samples, each contains a list of field data(Tensor):
             tokens, token_type_ids, start_labels, end_labels, start_label_mask, end_label_mask, match_labels, sample_idx, label_idx
