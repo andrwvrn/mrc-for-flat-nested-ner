@@ -94,6 +94,7 @@ def convert_file(input_file: str, output_file: str, tag2query_file: str):
             output.extend(list(context_entities.values()))
 
     json.dump(output, open(output_file, "w"), ensure_ascii=False, indent=2)
+    print(f"Converted {origin_count} samples to {new_count} samples and saved to {output_file}")
 
 
 def main():

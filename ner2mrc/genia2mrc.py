@@ -36,7 +36,7 @@ def convert_file(input_file: str, output_file: str, tag2query_file: str):
             new_count += 1
 
     json.dump(output, open(output_file, "w"), ensure_ascii=False, indent=2)
-    print(f"Convert {origin_count} samples to {new_count} samples and save to {output_file}")
+    print(f"Converted {origin_count} samples to {new_count} samples and saved to {output_file}")
 
 
 def main():
