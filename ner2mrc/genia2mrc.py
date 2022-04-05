@@ -7,13 +7,19 @@ import argparse
 import os
 import json
 
+from typing import Optional
 
-def convert_file(input_file: str, output_file: str, tag2query_file: str):
+
+def convert_file(input_file: str, output_file: str, tag2query_file: Optional[str] = None):
     """
     Converts GENIA data to MRC format
     """
+    if tag2query_file:
+        tag2query = json.load(open(tag2query_file))
+    else:
+        tag2query = {}
+
     all_data = json.load(open(input_file))
-    tag2query = json.load(open(tag2query_file))
 
     output = []
     origin_count = 0
@@ -43,7 +49,7 @@ def main():
     parser = argparse.ArgumentParser(description="convert jsonlines to mrc")
     parser.add_argument("--convert_from_dir", type=str, required=True)
     parser.add_argument("--convert_to_dir", type=str, required=True)
-    parser.add_argument("--t2q_filename", type=str, required=True)
+    parser.add_argument("--t2q_filename", type=str, required=False, default=None)
 
     args = parser.parse_args()
 

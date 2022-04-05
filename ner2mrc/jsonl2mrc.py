@@ -4,8 +4,10 @@ import os
 
 import jsonlines
 
+from typing import Optional
 
-def convert_file(input_file: str, output_file: str, tag2query_file: str):
+
+def convert_file(input_file: str, output_file: str, tag2query_file: Optional[str] = None):
     """
     Converts files from jsonl to mrc format
 
@@ -59,7 +61,11 @@ def convert_file(input_file: str, output_file: str, tag2query_file: str):
         tag2query_file: str
            path to file that maps tag to its description
     """
-    tag2query = json.load(open(tag2query_file))
+    if tag2query_file:
+        tag2query = json.load(open(tag2query_file))
+    else:
+        tag2query = {}
+
     origin_count = 0
     new_count = 0
     output = []
@@ -79,8 +85,8 @@ def convert_file(input_file: str, output_file: str, tag2query_file: str):
                     context_entities[label] = {
                         "context": context,
                         "end_position": [end_pos],
-                        "entity_label": tag2query.get(label, label),
-                        "query": label,
+                        "entity_label": label,
+                        "query": tag2query.get(label, label),
                         "span_position": [f"{start_pos};{end_pos}"],
                         "start_position": [start_pos]
                     }
@@ -101,7 +107,7 @@ def main():
     parser = argparse.ArgumentParser(description="convert jsonlines to mrc")
     parser.add_argument("--convert_from_dir", type=str, required=True)
     parser.add_argument("--convert_to_dir", type=str, required=True)
-    parser.add_argument("--t2q_filename", type=str, required=True)
+    parser.add_argument("--t2q_filename", type=str, required=False, default=None)
 
     args = parser.parse_args()
 

@@ -5,17 +5,24 @@
 
 import argparse
 import os
-from utils.bmes_decode import bmes_decode
 import json
 
+from typing import Optional
 
-def convert_file(input_file: str, output_file: str, tag2query_file: str):
+from utils.bmes_decode import bmes_decode
+
+
+def convert_file(input_file: str, output_file: str, tag2query_file: Optional[str] = None):
     """
     Converts MSRA raw data to MRC format
     """
+    if tag2query_file:
+        tag2query = json.load(open(tag2query_file))
+    else:
+        tag2query = {}
+
     origin_count = 0
     new_count = 0
-    tag2query = json.load(open(tag2query_file))
     mrc_samples = []
 
     with open(input_file) as fin:
@@ -45,7 +52,7 @@ def main():
     parser = argparse.ArgumentParser(description="convert jsonlines to mrc")
     parser.add_argument("--convert_from_dir", type=str, required=True)
     parser.add_argument("--convert_to_dir", type=str, required=True)
-    parser.add_argument("--t2q_filename", type=str, required=True)
+    parser.add_argument("--t2q_filename", type=str, required=False, default=None)
 
     args = parser.parse_args()
 
