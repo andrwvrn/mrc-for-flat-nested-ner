@@ -31,8 +31,8 @@ def bmes_decode(char_label_list: List[Tuple[str, str]]) -> List[Tag]:
     Returns:
         tags
     Examples:
-        >>> x = [("Hi", "O"), ("Beijing", "S-LOC")]
-        >>> bmes_decode(x)
+        >> x = [("Hi", "O"), ("Beijing", "S-LOC")]
+        >> bmes_decode(x)
         [{'term': 'Beijing', 'tag': 'LOC', 'begin': 1, 'end': 2}]
     """
     idx = 0
