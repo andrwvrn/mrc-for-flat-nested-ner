@@ -62,15 +62,6 @@ class MRCNERDataset(Dataset):
         start_positions = data["start_position"]
         end_positions = data["end_position"]
 
-        if self.is_chinese:
-            context = "".join(context.split())
-            end_positions = [x+1 for x in end_positions]
-        else:
-            # add space offsets
-            words = context.split()
-            start_positions = [x + sum([len(w) for w in words[:x]]) for x in start_positions]
-            end_positions = [x + sum([len(w) for w in words[:x+1]]) for x in end_positions]
-
         query_context_tokens = tokenizer.encode(query, context, add_special_tokens=True)
         tokens = query_context_tokens.ids
         type_ids = query_context_tokens.type_ids
