@@ -350,7 +350,9 @@ class BertLabeling(pl.LightningModule):
         return dataloader
 
 
-def find_best_checkpoint_on_dev(output_dir: str, log_file: str = "eval_result_log.txt", only_keep_the_best_ckpt: bool = False):
+def find_best_checkpoint_on_dev(output_dir: str,
+                                log_file: str = "eval_result_log.txt",
+                                only_keep_the_best_ckpt: bool = False):
     with open(os.path.join(output_dir, log_file)) as f:
         log_lines = f.readlines()
 
