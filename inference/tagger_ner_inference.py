@@ -43,10 +43,7 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main():
-    parser = get_parser()
-    args = parser.parse_args()
-
+def evaluate(args):
     trained_tagger_ner_model = BertSequenceLabeling.load_from_checkpoint(
         checkpoint_path=args.model_ckpt,
         hparams_file=args.hparams_file,
@@ -113,6 +110,15 @@ def main():
         print(f"Model predict: {pred_entity_lst}")
 
 
+def main(args_list=None):
+    parser = get_parser()
+    if args_list:
+        args = parser.parse_args(args_list)
+    else:
+        args = parser.parse_args()
 
-if __name__ == "__main__":
+    evaluate(args)
+
+
+if __name__ == '__main__':
     main()
