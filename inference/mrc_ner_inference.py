@@ -9,10 +9,12 @@ import argparse
 from torch.utils.data import DataLoader
 from utils.random_seed import set_random_seed
 set_random_seed(0)
+
 from train.mrc_ner_trainer import BertLabeling
 from tokenizers import BertWordPieceTokenizer
 from datasets.mrc_ner_dataset import MRCNERDataset
 from metrics.functional.query_span_f1 import extract_flat_spans, extract_nested_spans
+
 
 def get_dataloader(config, data_prefix="test"):
     data_path = os.path.join(config.data_dir, f"mrc-ner.{data_prefix}")
@@ -28,6 +30,7 @@ def get_dataloader(config, data_prefix="test"):
     dataloader = DataLoader(dataset=dataset, batch_size=1, shuffle=False)
 
     return dataloader, data_tokenizer
+
 
 def get_query_index_to_label_cate(dataset_sign):
     # NOTICE: need change if you use other datasets.
@@ -52,9 +55,7 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main():
-    parser = get_parser()
-    args = parser.parse_args()
+def evaluate(args):
     trained_mrc_ner_model = BertLabeling.load_from_checkpoint(
         checkpoint_path=args.model_ckpt,
         hparams_file=args.hparams_file,
@@ -107,7 +108,7 @@ def main():
             if len(entities_info) != 0:
                 for entity_info in entities_info:
                     start, end = entity_info[0], entity_info[1]
-                    entity_string = " ".join(subtokens_lst[start: end+1 ])
+                    entity_string = " ".join(subtokens_lst[start: end+1])
                     entity_string = entity_string.replace(" ##", "")
                     entity_lst.append((start, end+1, entity_string, entity_info[2]))
 
@@ -116,5 +117,16 @@ def main():
         print(f"Model predict: {entity_lst}")
         # entity_lst is a list of (subtoken_start_pos, subtoken_end_pos, substring, entity_type)
 
-if __name__ == "__main__":
+
+def main(args_list=None):
+    parser = get_parser()
+    if args_list:
+        args = parser.parse_args(args_list)
+    else:
+        args = parser.parse_args()
+
+    evaluate(args)
+
+
+if __name__ == '__main__':
     main()
