@@ -55,7 +55,13 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def evaluate(args):
+def evaluate(args_list=None):
+    parser = get_parser()
+    if args_list:
+        args = parser.parse_args(args_list)
+    else:
+        args = parser.parse_args()
+
     trained_mrc_ner_model = BertLabeling.load_from_checkpoint(
         checkpoint_path=args.model_ckpt,
         hparams_file=args.hparams_file,
@@ -118,14 +124,8 @@ def evaluate(args):
         # entity_lst is a list of (subtoken_start_pos, subtoken_end_pos, substring, entity_type)
 
 
-def main(args_list=None):
-    parser = get_parser()
-    if args_list:
-        args = parser.parse_args(args_list)
-    else:
-        args = parser.parse_args()
-
-    evaluate(args)
+def main():
+    evaluate()
 
 
 if __name__ == '__main__':

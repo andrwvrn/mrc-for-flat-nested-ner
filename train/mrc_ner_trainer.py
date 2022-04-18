@@ -40,16 +40,16 @@ class BertLabeling(pl.LightningModule):
     ):
         """Initialize a model, tokenizer and config."""
         super().__init__()
-        format = '%(asctime)s - %(name)s - %(message)s'
+        frmt = '%(asctime)s - %(name)s - %(message)s'
         if isinstance(args, argparse.Namespace):
             self.save_hyperparameters(args)
             self.args = args
-            logging.basicConfig(format=format, filename=os.path.join(self.args.default_root_dir, "eval_result_log.txt"), level=logging.INFO)
+            logging.basicConfig(format=frmt, filename=os.path.join(self.args.default_root_dir, "eval_result_log.txt"), level=logging.INFO)
         else:
             # eval mode
             TmpArgs = namedtuple("tmp_args", field_names=list(args.keys()))
             self.args = args = TmpArgs(**args)
-            logging.basicConfig(format=format, filename=os.path.join(self.args.default_root_dir, "eval_test.txt"), level=logging.INFO)
+            logging.basicConfig(format=frmt, filename=os.path.join(self.args.default_root_dir, "eval_test.txt"), level=logging.INFO)
 
         self.bert_dir = args.bert_config_dir
         self.data_dir = self.args.data_dir
@@ -287,7 +287,6 @@ class BertLabeling(pl.LightningModule):
         return {'val_loss': avg_loss, 'log': tensorboard_logs}
 
     def test_step(self, batch, batch_idx):
-        """"""
         output = {}
         tokens, token_type_ids, start_labels, end_labels, start_label_mask, end_label_mask, match_labels, sample_idx, label_idx = batch
 
@@ -350,6 +349,7 @@ class BertLabeling(pl.LightningModule):
 
         return dataloader
 
+
 def find_best_checkpoint_on_dev(output_dir: str, log_file: str = "eval_result_log.txt", only_keep_the_best_ckpt: bool = False):
     with open(os.path.join(output_dir, log_file)) as f:
         log_lines = f.readlines()
@@ -380,7 +380,7 @@ def find_best_checkpoint_on_dev(output_dir: str, log_file: str = "eval_result_lo
     return best_f1_on_dev, best_checkpoint_on_dev
 
 
-def main():
+def train(args_list=None):
     """main"""
     parser = get_parser()
 
@@ -391,7 +391,10 @@ def main():
     # ie: now --gpus --num_nodes ... --fast_dev_run all work in the cli
     parser = Trainer.add_argparse_args(parser)
 
-    args = parser.parse_args()
+    if args_list:
+        args = parser.parse_args(args_list)
+    else:
+        args = parser.parse_args()
 
     model = BertLabeling(args)
     if args.pretrained_checkpoint:
@@ -423,6 +426,10 @@ def main():
     checkpoint = torch.load(path_to_best_checkpoint)
     model.load_state_dict(checkpoint['state_dict'])
     model.result_logger.info("=&" * 20)
+
+
+def main():
+    train()
 
 
 if __name__ == '__main__':
