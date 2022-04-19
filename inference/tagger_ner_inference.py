@@ -4,16 +4,18 @@
 # file: tagger_ner_inference.py
 
 import os
-import torch
 import argparse
+
 from torch.utils.data import DataLoader
 from utils.random_seed import set_random_seed
+
 set_random_seed(0)
-from train.bert_tagger_trainer import BertSequenceLabeling
-from transformers import AutoTokenizer
+
 from datasets.tagger_ner_dataset import get_labels
 from datasets.tagger_ner_dataset import TaggerNERDataset
 from metrics.functional.tagger_span_f1 import get_entity_from_bmes_lst, transform_predictions_to_labels
+from train.bert_tagger_trainer import BertSequenceLabeling
+from transformers import AutoTokenizer
 
 
 def get_dataloader(config, data_prefix="test"):
@@ -63,10 +65,10 @@ def evaluate(args_list=None):
 
     data_loader, data_tokenizer = get_dataloader(args)
     vocab_path = os.path.join(args.bert_dir, "vocab.txt")
-    # load token
-    vocab_path = os.path.join(args.bert_dir, "vocab.txt")
+
     with open(vocab_path, "r") as f:
         subtokens = [token.strip() for token in f.readlines()]
+
     idx2tokens = {}
     for token_idx, token in enumerate(subtokens):
         idx2tokens[token_idx] = token
