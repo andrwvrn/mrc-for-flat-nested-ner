@@ -305,7 +305,7 @@ def find_best_checkpoint_on_dev(output_dir: str, log_file: str = "eval_result_lo
     return best_f1_on_dev, best_checkpoint_on_dev
 
 
-def main():
+def train(args_list=None):
     """main"""
     parser = get_parser()
 
@@ -314,7 +314,12 @@ def main():
     # add all the available trainer options to argparse
     # ie: now --gpus --num_nodes ... --fast_dev_run all work in the cli
     parser = Trainer.add_argparse_args(parser)
-    args = parser.parse_args()
+
+    if args_list:
+        args = parser.parse_args(args_list)
+    else:
+        args = parser.parse_args()
+
     model = BertSequenceLabeling(args)
     if args.pretrained_checkpoint:
         model.load_state_dict(torch.load(args.pretrained_checkpoint,
@@ -344,6 +349,10 @@ def main():
     model.load_state_dict(checkpoint['state_dict'])
     trainer.test(model)
     model.result_logger.info("=&" * 20)
+
+
+def main():
+    train()
 
 
 if __name__ == '__main__':
