@@ -50,7 +50,10 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model_ckpt", type=str, default="")
     parser.add_argument("--hparams_file", type=str, default="")
     parser.add_argument("--flat_ner", action="store_true",)
-    parser.add_argument("--dataset_sign", type=str, choices=["ontonotes4", "msra", "conll03", "ace04", "ace05"], default="conll03")
+    parser.add_argument("--dataset_sign",
+                        type=str,
+                        choices=["ontonotes4", "msra", "conll03", "ace04", "ace05"],
+                        default="conll03")
 
     return parser
 
@@ -85,7 +88,9 @@ def evaluate(args_list=None):
         tokens, token_type_ids, start_labels, end_labels, start_label_mask, end_label_mask, match_labels, sample_idx, label_idx = batch
         attention_mask = (tokens != 0).long()
 
-        start_logits, end_logits, span_logits = trained_mrc_ner_model.model(tokens, attention_mask=attention_mask, token_type_ids=token_type_ids)
+        start_logits, end_logits, span_logits = trained_mrc_ner_model.model(tokens,
+                                                                            attention_mask=attention_mask,
+                                                                            token_type_ids=token_type_ids)
         start_preds, end_preds, span_preds = start_logits > 0, end_logits > 0, span_logits > 0
 
         subtokens_idx_lst = tokens.numpy().tolist()[0]
@@ -94,20 +99,28 @@ def evaluate(args_list=None):
         readable_input_str = data_tokenizer.decode(subtokens_idx_lst, skip_special_tokens=True)
 
         if args.flat_ner:
-            entities_info = extract_flat_spans(torch.squeeze(start_preds), torch.squeeze(end_preds),
-                                               torch.squeeze(span_preds), torch.squeeze(attention_mask), pseudo_tag=label_cate)
+            entities_info = extract_flat_spans(torch.squeeze(start_preds),
+                                               torch.squeeze(end_preds),
+                                               torch.squeeze(span_preds),
+                                               torch.squeeze(attention_mask),
+                                               pseudo_tag=label_cate)
             entity_lst = []
 
             if len(entities_info) != 0:
                 for entity_info in entities_info:
                     start, end = entity_info[0], entity_info[1]
-                    entity_string = " ".join(subtokens_lst[start: end])
+                    entity_string = " ".join(subtokens_lst[start:end])
                     entity_string = entity_string.replace(" ##", "")
                     entity_lst.append((start, end, entity_string, entity_info[2]))
 
         else:
             match_preds = span_logits > 0
-            entities_info = extract_nested_spans(start_preds, end_preds, match_preds, start_label_mask, end_label_mask, pseudo_tag=label_cate)
+            entities_info = extract_nested_spans(start_preds,
+                                                 end_preds,
+                                                 match_preds,
+                                                 start_label_mask,
+                                                 end_label_mask,
+                                                 pseudo_tag=label_cate)
 
             entity_lst = []
 

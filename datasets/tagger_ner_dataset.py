@@ -114,9 +114,10 @@ class TaggerNERDataset(Dataset):
                 tmp_label_lst = [label_item] + [-100 for _ in range((len_wordpiece - 1))]
                 wordpiece_label_lst.extend(tmp_label_lst)
 
+        # -2 is for [CLS] and [SEP] tokens
         if len(wordpiece_token_lst) > self.max_length - 2:
-            wordpiece_token_lst = wordpiece_token_lst[: self.max_length-2]
-            wordpiece_label_lst = wordpiece_label_lst[: self.max_length-2]
+            wordpiece_token_lst = wordpiece_token_lst[:self.max_length-2]
+            wordpiece_label_lst = wordpiece_label_lst[:self.max_length-2]
 
         wordpiece_token_lst = [self.cls_idx] + wordpiece_token_lst + [self.sep_idx]
         wordpiece_label_lst = [-100] + wordpiece_label_lst + [-100]

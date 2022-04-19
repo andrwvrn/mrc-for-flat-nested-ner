@@ -90,7 +90,7 @@ def extract_flat_spans(start_pred, end_pred, match_pred, label_mask, pseudo_tag 
         >> match_pred = [[0, 0], [0, 1]]
         >> label_mask = [1, 1]
         >> extract_flat_spans(start_pred, end_pred, match_pred, label_mask)
-        [(1, 2)]
+        [(1, 2, 'TAG')]
     """
     pseudo_input = "a"
 
