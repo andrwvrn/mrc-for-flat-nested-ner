@@ -52,7 +52,7 @@ def load_data_in_conll(data_path):
         load data in conll format
     Returns:
         [([word1, word2, word3, word4], [label1, label2, label3, label4]),
-        ([word5, word6, word7, wordd8], [label5, label6, label7, label8])]
+        ([word5, word6, word7, word8], [label5, label6, label7, label8])]
     """
     dataset = []
     with open(data_path, "r", encoding="utf-8") as f:
@@ -111,7 +111,7 @@ class TaggerNERDataset(Dataset):
             else:
                 len_wordpiece = len(tmp_token_lst)
                 wordpiece_token_lst.extend(tmp_token_lst)
-                tmp_label_lst = [label_item] + [-100 for idx in range((len_wordpiece - 1))]
+                tmp_label_lst = [label_item] + [-100 for _ in range((len_wordpiece - 1))]
                 wordpiece_label_lst.extend(tmp_label_lst)
 
         if len(wordpiece_token_lst) > self.max_length - 2:

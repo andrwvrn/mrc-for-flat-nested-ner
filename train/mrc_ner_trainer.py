@@ -262,8 +262,11 @@ class BertLabeling(pl.LightningModule):
         output[f"match_loss"] = match_loss
 
         start_preds, end_preds = start_logits > 0, end_logits > 0
-        span_f1_stats = self.span_f1(start_preds=start_preds, end_preds=end_preds, match_logits=span_logits,
-                                     start_label_mask=start_label_mask, end_label_mask=end_label_mask,
+        span_f1_stats = self.span_f1(start_preds=start_preds,
+                                     end_preds=end_preds,
+                                     match_logits=span_logits,
+                                     start_label_mask=start_label_mask,
+                                     end_label_mask=end_label_mask,
                                      match_labels=match_labels)
         output["span_f1_stats"] = span_f1_stats
 
@@ -294,9 +297,14 @@ class BertLabeling(pl.LightningModule):
         start_logits, end_logits, span_logits = self(tokens, attention_mask, token_type_ids)
 
         start_preds, end_preds = start_logits > 0, end_logits > 0
-        span_f1_stats = self.span_f1(start_preds=start_preds, end_preds=end_preds, match_logits=span_logits,
-                                     start_label_mask=start_label_mask, end_label_mask=end_label_mask,
+
+        span_f1_stats = self.span_f1(start_preds=start_preds,
+                                     end_preds=end_preds,
+                                     match_logits=span_logits,
+                                     start_label_mask=start_label_mask,
+                                     end_label_mask=end_label_mask,
                                      match_labels=match_labels)
+
         output["span_f1_stats"] = span_f1_stats
 
         return output
@@ -363,8 +371,10 @@ def find_best_checkpoint_on_dev(output_dir: str,
     for log_line in log_lines:
         if "saving model to" in log_line:
             checkpoint_info_lines.append(log_line)
+
     # example of log line
-    # Epoch 00000: val_f1 reached 0.00000 (best 0.00000), saving model to /data/xiaoya/outputs/0117/debug_5_12_2e-5_0.001_0.001_275_0.1_1_0.25/checkpoint/epoch=0.ckpt as top 20
+    # Epoch 00000: val_f1 reached 0.00000 (best 0.00000), saving model
+    # to /data/xiaoya/outputs/0117/debug_5_12_2e-5_0.001_0.001_275_0.1_1_0.25/checkpoint/epoch=0.ckpt as top 20
     best_f1_on_dev = 0
     best_checkpoint_on_dev = ""
     for checkpoint_info_line in checkpoint_info_lines:
@@ -420,7 +430,8 @@ def train(args_list=None):
 
     trainer.fit(model)
 
-    # after training, use the model checkpoint which achieves the best f1 score on dev set to compute the f1 on test set.
+    # after training, use the model checkpoint which achieves the best f1 score
+    # on dev set to compute the f1 on test set.
     best_f1_on_dev, path_to_best_checkpoint = find_best_checkpoint_on_dev(args.default_root_dir, )
     model.result_logger.info("=&" * 20)
     model.result_logger.info(f"Best F1 on DEV is {best_f1_on_dev}")
