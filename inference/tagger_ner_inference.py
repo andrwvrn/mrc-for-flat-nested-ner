@@ -40,7 +40,8 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--hparams_file", type=str, default="")
     parser.add_argument("--do_lowercase", action="store_true")
     parser.add_argument("--data_file_suffix", type=str, default=".word.bmes")
-    parser.add_argument("--dataset_sign", type=str, choices=["en_onto", "en_conll03", "zh_onto", "zh_msra" ], default="en_onto")
+    parser.add_argument("--dataset_sign", type=str, choices=["en_onto", "en_conll03", "zh_onto", "zh_msra"],
+                        default="en_onto")
 
     return parser
 
