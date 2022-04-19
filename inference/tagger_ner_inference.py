@@ -100,18 +100,18 @@ def evaluate(args_list=None):
                         inter_pos = entity_info.find(",")
                         start_pos = 1
                         end_pos = entity_info.find("]")
-                        start_idx = int(entity_info[start_pos: inter_pos])
-                        end_idx = int(entity_info[inter_pos+1: end_pos])
+                        start_idx = int(entity_info[start_pos:inter_pos])
+                        end_idx = int(entity_info[inter_pos+1:end_pos])
                     else:
                         start_pos = 1
                         end_pos = entity_info.find("]")
                         start_idx = int(entity_info[start_pos:end_pos])
                         end_idx = int(entity_info[start_pos:end_pos])
 
-                    entity_tokens = subtoken_lst[start_idx: end_idx]
+                    entity_tokens = subtoken_lst[start_idx:end_idx]
                     entity_string = " ".join(entity_tokens)
                     entity_string = entity_string.replace(" ##", "")
-                    # append  start, end
+                    # append start, end
                     pred_entity_lst.append((entity_string, entity_info[end_pos+1:]))
             else:
                 pred_entity_lst.append([])
