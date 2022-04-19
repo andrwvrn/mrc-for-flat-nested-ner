@@ -74,7 +74,9 @@ def evaluate(args_list=None):
     for batch in data_loader:
         token_input_ids, token_type_ids, attention_mask, sequence_labels, is_wordpiece_mask = batch
         batch_size = token_input_ids.shape[0]
-        logits = trained_tagger_ner_model.model(token_input_ids, token_type_ids=token_type_ids, attention_mask=attention_mask)
+        logits = trained_tagger_ner_model.model(token_input_ids,
+                                                token_type_ids=token_type_ids,
+                                                attention_mask=attention_mask)
 
         sequence_pred_lst = transform_predictions_to_labels(logits.view(batch_size, -1, len(entity_label_lst)),
                                                             is_wordpiece_mask, task_idx2label, input_type="logit")
