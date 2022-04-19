@@ -54,7 +54,7 @@ class BertSequenceLabeling(pl.LightningModule):
         self.data_dir = self.args.data_dir
         self.task_labels = get_labels(self.args.data_sign)
         self.num_labels = len(self.task_labels)
-        self.task_idx2label = {label_idx : label_item for label_idx, label_item in enumerate(get_labels(self.args.data_sign))}
+        self.task_idx2label = {label_idx: label_item for label_idx, label_item in enumerate(get_labels(self.args.data_sign))}
         bert_config = BertTaggerConfig.from_pretrained(args.bert_config_dir,
                                                        hidden_dropout_prob=args.bert_dropout,
                                                        attention_probs_dropout_prob=args.bert_dropout,
@@ -178,8 +178,14 @@ class BertSequenceLabeling(pl.LightningModule):
         loss = self.compute_loss(logits, sequence_labels, input_mask=attention_mask)
         output[f"val_loss"] = loss
 
-        sequence_pred_lst = transform_predictions_to_labels(logits.view(batch_size, -1, len(self.task_labels)), is_wordpiece_mask, self.task_idx2label, input_type="logit")
-        sequence_gold_lst = transform_predictions_to_labels(sequence_labels, is_wordpiece_mask, self.task_idx2label, input_type="label")
+        sequence_pred_lst = transform_predictions_to_labels(logits.view(batch_size, -1, len(self.task_labels)),
+                                                            is_wordpiece_mask,
+                                                            self.task_idx2label,
+                                                            input_type="logit")
+        sequence_gold_lst = transform_predictions_to_labels(sequence_labels,
+                                                            is_wordpiece_mask,
+                                                            self.task_idx2label,
+                                                            input_type="label")
         span_f1_stats = self.span_f1(sequence_pred_lst, sequence_gold_lst)
         output["span_f1_stats"] = span_f1_stats
 
@@ -212,8 +218,12 @@ class BertSequenceLabeling(pl.LightningModule):
         output[f"test_loss"] = loss
 
         sequence_pred_lst = transform_predictions_to_labels(logits.view(batch_size, -1, len(self.task_labels)),
-                                                            is_wordpiece_mask, self.task_idx2label, input_type="logit")
-        sequence_gold_lst = transform_predictions_to_labels(sequence_labels, is_wordpiece_mask, self.task_idx2label,
+                                                            is_wordpiece_mask,
+                                                            self.task_idx2label,
+                                                            input_type="logit")
+        sequence_gold_lst = transform_predictions_to_labels(sequence_labels,
+                                                            is_wordpiece_mask,
+                                                            self.task_idx2label,
                                                             input_type="label")
         span_f1_stats = self.span_f1(sequence_pred_lst, sequence_gold_lst)
         output["span_f1_stats"] = span_f1_stats
