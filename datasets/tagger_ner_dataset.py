@@ -4,12 +4,24 @@
 # file: tagger_ner_dataset.py
 
 import torch
+
+from typing import List, Tuple
+
 from transformers import AutoTokenizer
 from torch.utils.data import Dataset
 
 
-def get_labels(data_sign):
-    """gets the list of labels for this data set."""
+def get_labels(data_sign: str) -> List[str]:
+    """
+    Returns list of labels for a given dataset
+
+    Args:
+        data_sign: str
+            name of the dataset
+
+    Returns:
+        List of labels
+    """
     if data_sign == "zh_onto":
         return ["O", "S-GPE", "B-GPE", "M-GPE", "E-GPE",
                 "S-LOC", "B-LOC", "M-LOC", "E-LOC",
@@ -46,13 +58,19 @@ def get_labels(data_sign):
     return ["0", "1"]
 
 
-def load_data_in_conll(data_path):
+def load_data_in_conll(data_path: str) -> List[Tuple[List[str], List[str]]]:
     """
-    Desc:
-        load data in conll format
+    Loads data in conll format
+
+    Args:
+        data_path: str
+            path to dataset
     Returns:
-        [([word1, word2, word3, word4], [label1, label2, label3, label4]),
-        ([word5, word6, word7, word8], [label5, label6, label7, label8])]
+        dataset: List[Tuple[List[str], List[str]]]
+            list of tuples of lists containing words and labels of the provided dataset
+            if the form:
+                [([word1, word2, word3, word4], [label1, label2, label3, label4]),
+                 ([word5, word6, word7, word8], [label5, label6, label7, label8])]
     """
     dataset = []
     with open(data_path, "r", encoding="utf-8") as f:
@@ -73,18 +91,25 @@ def load_data_in_conll(data_path):
 
 class TaggerNERDataset(Dataset):
     """
-    MRC NER Dataset
+    Tagger NER Dataset
+
     Args:
-        data_path: path to Conll-style named entity data file.
+        data_path: str
+            path to conll-style named entity data file
         tokenizer: BertTokenizer
-        max_length: int, max length of query+context
-        is_chinese: is chinese dataset
-    Note:
-        https://github.com/huggingface/transformers/blob/143738214cb83e471f3a43652617c8881370342c/examples/pytorch/token-classification/run_ner.py#L362
-        https://github.com/huggingface/transformers/blob/143738214cb83e471f3a43652617c8881370342c/src/transformers/models/bert/modeling_bert.py#L1739
+            tokenizer object
+        max_length: int
+            max length of query+context
+        is_chinese: bool
+            is chinese dataset
     """
-    def __init__(self, data_path: str, tokenizer: AutoTokenizer, dataset_signature: str, max_length: int = 512,
-                 is_chinese: bool = False, pad_to_maxlen: bool = False, tagging_schema: str = "BMESO"):
+    def __init__(self,
+                 data_path: str,
+                 tokenizer: AutoTokenizer,
+                 dataset_signature: str,
+                 max_length: int = 512,
+                 is_chinese: bool = False,
+                 pad_to_maxlen: bool = False):
         self.all_data = load_data_in_conll(data_path)
         self.tokenizer = tokenizer
         self.max_length = max_length
