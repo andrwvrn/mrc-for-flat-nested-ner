@@ -22,8 +22,11 @@ def get_dataloader(config, data_prefix="test"):
     data_path = os.path.join(config.data_dir, f"{data_prefix}{config.data_file_suffix}")
     data_tokenizer = AutoTokenizer.from_pretrained(config.bert_dir, use_fast=False, do_lower_case=config.do_lowercase)
 
-    dataset = TaggerNERDataset(data_path, data_tokenizer, config.dataset_sign,
-                               max_length=config.max_length, is_chinese=config.is_chinese, pad_to_maxlen=False)
+    dataset = TaggerNERDataset(data_path,
+                               data_tokenizer,
+                               config.dataset_sign,
+                               max_length=config.max_length,
+                               pad_to_maxlen=False)
 
     dataloader = DataLoader(dataset=dataset, batch_size=1, shuffle=False)
 
@@ -40,7 +43,9 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--hparams_file", type=str, default="")
     parser.add_argument("--do_lowercase", action="store_true")
     parser.add_argument("--data_file_suffix", type=str, default=".word.bmes")
-    parser.add_argument("--dataset_sign", type=str, choices=["en_onto", "en_conll03", "zh_onto", "zh_msra"],
+    parser.add_argument("--dataset_sign",
+                        type=str,
+                        choices=["en_onto", "en_conll03", "zh_onto", "zh_msra"],
                         default="en_onto")
 
     return parser
@@ -82,7 +87,9 @@ def evaluate(args_list=None):
                                                 attention_mask=attention_mask)
 
         sequence_pred_lst = transform_predictions_to_labels(logits.view(batch_size, -1, len(entity_label_lst)),
-                                                            is_wordpiece_mask, task_idx2label, input_type="logit")
+                                                            is_wordpiece_mask,
+                                                            task_idx2label,
+                                                            input_type="logit")
         batch_subtokens_idx_lst = token_input_ids.numpy().tolist()[0]
         batch_subtokens_lst = [idx2tokens[item] for item in batch_subtokens_idx_lst]
         readable_input_str = data_tokenizer.decode(batch_subtokens_idx_lst, skip_special_tokens=True)

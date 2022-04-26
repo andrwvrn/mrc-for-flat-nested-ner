@@ -8,7 +8,7 @@ import numpy as np
 from utils.bmes_decode import bmes_decode
 
 
-def query_span_f1(start_preds, end_preds, match_logits, start_label_mask, end_label_mask, match_labels, flat=False):
+def query_span_f1(start_preds, end_preds, match_logits, start_label_mask, end_label_mask, match_labels):
     """
     Calculates span f1 according to query-based model output
 
@@ -20,6 +20,7 @@ def query_span_f1(start_preds, end_preds, match_logits, start_label_mask, end_la
         end_label_mask: [bsz, seq_len]
         match_labels: [bsz, seq_len, seq_len]
         flat: if True, decode as flat-ner
+
     Returns:
         span-f1 counts, tensor of shape [3]: tp, fp, fn
     """
@@ -77,13 +78,16 @@ def extract_nested_spans(start_preds, end_preds, match_preds, start_label_mask, 
 def extract_flat_spans(start_pred, end_pred, match_pred, label_mask, pseudo_tag = "TAG"):
     """
     Extract flat-ner spans from start/end/match logits
+
     Args:
         start_pred: [seq_len], 1/True for start, 0/False for non-start
         end_pred: [seq_len, 2], 1/True for end, 0/False for non-end
         match_pred: [seq_len, seq_len], 1/True for match, 0/False for non-match
         label_mask: [seq_len], 1 for valid boundary.
+
     Returns:
         tags: list of tuple (start, end)
+
     Examples:
         >> start_pred = [0, 1]
         >> end_pred = [0, 1]
@@ -127,6 +131,7 @@ def remove_overlap(spans):
 
     Args:
         spans: list of tuples (start, end), which means [start, end] is a ner-span
+
     Returns:
         spans without overlap
     """

@@ -186,10 +186,12 @@ def run_dataset():
 
     vocab_file = os.path.join(bert_path, "vocab.txt")
     tokenizer = BertWordPieceTokenizer(vocab_file)
-    dataset = MRCNERDataset(json_path=json_path, tokenizer=tokenizer,
+    dataset = MRCNERDataset(json_path=json_path,
+                            tokenizer=tokenizer,
                             is_chinese=is_chinese)
 
-    dataloader = DataLoader(dataset, batch_size=1,
+    dataloader = DataLoader(dataset,
+                            batch_size=1,
                             collate_fn=collate_to_max_length)
 
     for batch in dataloader:

@@ -258,8 +258,10 @@ class BertSequenceLabeling(pl.LightningModule):
     def get_dataloader(self, prefix="train", limit: int = None) -> DataLoader:
         """get train/dev/test dataloader"""
         data_path = os.path.join(self.data_dir, f"{prefix}{self.args.data_file_suffix}")
-        dataset = TaggerNERDataset(data_path, self.tokenizer, self.args.data_sign,
-                                   max_length=self.args.max_length, is_chinese=self.args.chinese,
+        dataset = TaggerNERDataset(data_path,
+                                   self.tokenizer,
+                                   self.args.data_sign,
+                                   max_length=self.args.max_length,
                                    pad_to_maxlen=False)
 
         if limit is not None:
