@@ -203,7 +203,8 @@ class BertSequenceLabeling(pl.LightningModule):
         tensorboard_logs[f"span_precision"] = span_precision
         tensorboard_logs[f"span_recall"] = span_recall
         tensorboard_logs[f"span_f1"] = span_f1
-        self.result_logger.info(f"EVAL INFO -> current_epoch is: {self.trainer.current_epoch}, current_global_step is: {self.trainer.global_step} ")
+        self.result_logger.info(f"EVAL INFO -> current_epoch is: {self.trainer.current_epoch}, "
+                                f"current_global_step is: {self.trainer.global_step} ")
         self.result_logger.info(f"EVAL INFO -> valid_f1 is: {span_f1}")
 
         return {'val_loss': avg_loss, 'log': tensorboard_logs}
@@ -287,7 +288,9 @@ class BertSequenceLabeling(pl.LightningModule):
         return dataloader
 
 
-def find_best_checkpoint_on_dev(output_dir: str, log_file: str = "eval_result_log.txt", only_keep_the_best_ckpt: bool = False):
+def find_best_checkpoint_on_dev(output_dir: str,
+                                log_file: str = "eval_result_log.txt",
+                                only_keep_the_best_ckpt: bool = False):
     with open(os.path.join(output_dir, log_file)) as f:
         log_lines = f.readlines()
 
@@ -299,7 +302,8 @@ def find_best_checkpoint_on_dev(output_dir: str, log_file: str = "eval_result_lo
         if "saving model to" in log_line:
             checkpoint_info_lines.append(log_line)
     # example of log line
-    # Epoch 00000: val_f1 reached 0.00000 (best 0.00000), saving model to /data/xiaoya/outputs/0117/debug_5_12_2e-5_0.001_0.001_275_0.1_1_0.25/checkpoint/epoch=0.ckpt as top 20
+    # Epoch 00000: val_f1 reached 0.00000 (best 0.00000), saving model
+    # to /data/xiaoya/outputs/0117/debug_5_12_2e-5_0.001_0.001_275_0.1_1_0.25/checkpoint/epoch=0.ckpt as top 20
     best_f1_on_dev = 0
     best_checkpoint_on_dev = ""
     for checkpoint_info_line in checkpoint_info_lines:
@@ -352,7 +356,8 @@ def train(args_list=None):
     )
     trainer.fit(model)
 
-    # after training, use the model checkpoint which achieves the best f1 score on dev set to compute the f1 on test set.
+    # after training, use the model checkpoint which achieves the best f1 score
+    # on dev set to compute the f1 on test set.
     best_f1_on_dev, path_to_best_checkpoint = find_best_checkpoint_on_dev(args.output_dir,)
     model.result_logger.info("=&" * 20)
     model.result_logger.info(f"Best F1 on DEV is {best_f1_on_dev}")
