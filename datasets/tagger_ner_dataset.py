@@ -11,7 +11,7 @@ import torch
 from typing import List, Tuple
 
 from torch.utils.data import DataLoader, Dataset
-from transformers import BertTokenizerFast
+from transformers import AutoTokenizer
 
 from datasets.collate_functions import collate_to_max_length
 
@@ -124,7 +124,7 @@ class TaggerNERDataset(Dataset):
     """
     def __init__(self,
                  data_path: str,
-                 tokenizer: BertTokenizerFast,
+                 tokenizer: AutoTokenizer,
                  dataset_signature: str,
                  max_length: int = 512,
                  pad_to_maxlen: bool = False):
@@ -192,9 +192,7 @@ def run_dataset():
     bert_path = args.bert_path
     dataset_path = args.dataset_path
 
-    vocab_file = os.path.join(bert_path, "vocab.txt")
-
-    tokenizer = BertTokenizerFast(vocab_file)
+    tokenizer = AutoTokenizer.from_pretrained(bert_path)
     dataset = TaggerNERDataset(data_path=dataset_path,
                                tokenizer=tokenizer,
                                dataset_signature=args.dataset_sign)
