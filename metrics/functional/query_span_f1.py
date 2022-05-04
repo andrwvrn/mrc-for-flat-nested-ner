@@ -19,7 +19,6 @@ def query_span_f1(start_preds, end_preds, match_logits, start_label_mask, end_la
         start_label_mask: [bsz, seq_len]
         end_label_mask: [bsz, seq_len]
         match_labels: [bsz, seq_len, seq_len]
-        flat: if True, decode as flat-ner
 
     Returns:
         span-f1 counts, tensor of shape [3]: tp, fp, fn

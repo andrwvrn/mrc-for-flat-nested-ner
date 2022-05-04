@@ -73,8 +73,7 @@ class BertLabeling(pl.LightningModule):
         self.weight_start = args.weight_start / weight_sum
         self.weight_end = args.weight_end / weight_sum
         self.weight_span = args.weight_span / weight_sum
-        self.flat_ner = args.flat
-        self.span_f1 = QuerySpanF1(flat=self.flat_ner)
+        self.span_f1 = QuerySpanF1()
         self.chinese = args.chinese
         self.optimizer = args.optimizer
         self.span_loss_candidates = args.span_loss_candidates
@@ -91,7 +90,6 @@ class BertLabeling(pl.LightningModule):
         parser.add_argument("--weight_start", type=float, default=1.0)
         parser.add_argument("--weight_end", type=float, default=1.0)
         parser.add_argument("--weight_span", type=float, default=1.0)
-        parser.add_argument("--flat", action="store_true", help="is flat ner")
         parser.add_argument("--span_loss_candidates", choices=["all", "pred_and_gold", "pred_gold_random", "gold"],
                             default="all", help="Candidates used to compute span loss")
         parser.add_argument("--chinese", action="store_true",
