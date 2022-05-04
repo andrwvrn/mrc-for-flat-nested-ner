@@ -3,10 +3,16 @@
 
 # file: mrc_ner_dataset.py
 
+import argparse
 import json
+import os
+
 import torch
+
 from tokenizers import BertWordPieceTokenizer
-from torch.utils.data import Dataset
+from torch.utils.data import DataLoader, Dataset
+
+from datasets.collate_functions import collate_to_max_length
 
 
 class MRCNERDataset(Dataset):
@@ -19,8 +25,13 @@ class MRCNERDataset(Dataset):
         possible_only: if True, only use possible samples that contain answer for the query/context
         is_chinese: is chinese dataset
     """
-    def __init__(self, json_path, tokenizer: BertWordPieceTokenizer, max_length: int = 512, possible_only: bool = False,
-                 is_chinese: bool = False, pad_to_maxlen: bool = False):
+    def __init__(self,
+                 json_path,
+                 tokenizer: BertWordPieceTokenizer,
+                 max_length: int = 512,
+                 possible_only: bool = False,
+                 is_chinese: bool = False,
+                 pad_to_maxlen: bool = False):
         self.all_data = json.load(open(json_path, encoding="utf-8"))
         self.tokenizer = tokenizer
         self.max_length = max_length
@@ -168,21 +179,16 @@ class MRCNERDataset(Dataset):
 
 def run_dataset():
     """test dataset"""
-    import os
-    from datasets.collate_functions import collate_to_max_length
-    from torch.utils.data import DataLoader
-    # zh datasets
-    bert_path = "/data/nfsdata/nlp/BERT_BASE_DIR/chinese_L-12_H-768_A-12"
-    vocab_file = os.path.join(bert_path, "vocab.txt")
-    # json_path = "/mnt/mrc/zh_msra/mrc-ner.test"
-    json_path = "/data/xiaoya/datasets/mrc_ner/zh_msra/mrc-ner.train"
-    is_chinese = True
+    parser = argparse.ArgumentParser(description="run mrc ner dataset")
+    parser.add_argument("--bert_path", type=str, required=True)
+    parser.add_argument("--input_path", type=str, required=True)
+    parser.add_argument("--is_chinese", action="store_true")
 
-    # en datasets
-    # bert_path = "/mnt/mrc/bert-base-uncased"
-    # json_path = "/mnt/mrc/ace2004/mrc-ner.train"
-    # json_path = "/mnt/mrc/genia/mrc-ner.train"
-    # is_chinese = False
+    args = parser.parse_args()
+
+    bert_path = args.bert_path
+    json_path = args.input_path
+    is_chinese = args.is_chinese
 
     vocab_file = os.path.join(bert_path, "vocab.txt")
     tokenizer = BertWordPieceTokenizer(vocab_file)
