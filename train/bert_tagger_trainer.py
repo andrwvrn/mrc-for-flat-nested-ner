@@ -280,8 +280,10 @@ class BertSequenceLabeling(pl.LightningModule):
             batch_size = self.args.eval_batch_size
 
         dataloader = DataLoader(
-            dataset=dataset, sampler=data_sampler,
-            batch_size=batch_size, num_workers=self.args.workers,
+            dataset=dataset,
+            sampler=data_sampler,
+            batch_size=batch_size,
+            num_workers=self.args.workers,
             collate_fn=tagger_collate_to_max_length
         )
 

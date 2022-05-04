@@ -4,7 +4,6 @@
 # file: tagger_ner_dataset.py
 
 import argparse
-import os
 
 import torch
 
@@ -13,7 +12,6 @@ from typing import List, Tuple
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer
 
-from datasets.collate_functions import collate_to_max_length
 
 
 def get_labels(data_sign: str) -> List[str]:
@@ -198,7 +196,8 @@ def run_dataset():
                                dataset_signature=args.dataset_sign)
 
     dataloader = DataLoader(dataset,
-                            batch_size=1)
+                            batch_size=1,
+                            )
 
     for batch in dataloader:
         print("----------------------- BATCH START -----------------------")
