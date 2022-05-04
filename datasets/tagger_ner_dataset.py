@@ -3,12 +3,17 @@
 
 # file: tagger_ner_dataset.py
 
+import argparse
+import os
+
 import torch
 
 from typing import List, Tuple
 
-from transformers import AutoTokenizer
-from torch.utils.data import Dataset
+from torch.utils.data import DataLoader, Dataset
+from transformers import BertTokenizerFast
+
+from datasets.collate_functions import collate_to_max_length
 
 
 def get_labels(data_sign: str) -> List[str]:
@@ -68,9 +73,18 @@ def load_data_in_conll(data_path: str) -> List[Tuple[List[str], List[str]]]:
     Returns:
         dataset: List[Tuple[List[str], List[str]]]
             list of tuples of lists containing words and labels of the provided dataset
-            if the form:
-                [([word1, word2, word3, word4], [label1, label2, label3, label4]),
-                 ([word5, word6, word7, word8], [label5, label6, label7, label8])]
+
+    Example:
+        $ cat path_to_file
+          word1 label1
+          word2 label2
+
+          word3 label3
+          word4 label4
+          word5 label5
+        >> load_data_in_conll(path_to_file)
+          [([word1, word2], [label1, label2]),
+           ([word3, word4, word5], [label3, label4, label5])]
     """
     dataset = []
     with open(data_path, "r", encoding="utf-8") as f:
@@ -86,6 +100,11 @@ def load_data_in_conll(data_path: str) -> List[Tuple[List[str], List[str]]]:
             word, tag = line.split(" ")
             sentence.append(word)
             labels.append(tag)
+
+    # append the last sentence and labels tuple if dataset file doesn't end with empty line
+    if len(datalines) != 0 and len(datalines[-1]) != 0:
+        dataset.append((sentence, labels))
+
     return dataset
 
 
@@ -96,24 +115,22 @@ class TaggerNERDataset(Dataset):
     Args:
         data_path: str
             path to conll-style named entity data file
+        dataset_signature: str
+            name of the dataset
         tokenizer: BertTokenizer
             tokenizer object
         max_length: int
-            max length of query+context
-        is_chinese: bool
-            is chinese dataset
+            max length of context
     """
     def __init__(self,
                  data_path: str,
-                 tokenizer: AutoTokenizer,
+                 tokenizer: BertTokenizerFast,
                  dataset_signature: str,
                  max_length: int = 512,
-                 is_chinese: bool = False,
                  pad_to_maxlen: bool = False):
         self.all_data = load_data_in_conll(data_path)
         self.tokenizer = tokenizer
         self.max_length = max_length
-        self.is_chinese = is_chinese
         self.pad_to_maxlen = pad_to_maxlen
         self.pad_idx = 0
         self.cls_idx = 101
@@ -139,7 +156,7 @@ class TaggerNERDataset(Dataset):
                 tmp_label_lst = [label_item] + [-100 for _ in range((len_wordpiece - 1))]
                 wordpiece_label_lst.extend(tmp_label_lst)
 
-        # -2 is for [CLS] and [SEP] tokens
+        # subtract 2 to add [CLS] and [SEP] tokens later
         if len(wordpiece_token_lst) > self.max_length - 2:
             wordpiece_token_lst = wordpiece_token_lst[:self.max_length-2]
             wordpiece_label_lst = wordpiece_label_lst[:self.max_length-2]
@@ -162,3 +179,40 @@ class TaggerNERDataset(Dataset):
                 torch.tensor(attention_mask, dtype=torch.long),
                 torch.tensor(wordpiece_label_idx_lst, dtype=torch.long),
                 torch.tensor(is_wordpiece_mask, dtype=torch.long)]
+
+
+def run_dataset():
+    parser = argparse.ArgumentParser(description="run tagger ner dataset")
+    parser.add_argument("--bert_path", type=str, required=True)
+    parser.add_argument("--dataset_path", type=str, required=True)
+    parser.add_argument("--dataset_sign", type=str, required=False, default='en_conll03')
+
+    args = parser.parse_args()
+
+    bert_path = args.bert_path
+    dataset_path = args.dataset_path
+
+    vocab_file = os.path.join(bert_path, "vocab.txt")
+
+    tokenizer = BertTokenizerFast(vocab_file)
+    dataset = TaggerNERDataset(data_path=dataset_path,
+                               tokenizer=tokenizer,
+                               dataset_signature=args.dataset_sign)
+
+    dataloader = DataLoader(dataset,
+                            batch_size=1)
+
+    for batch in dataloader:
+        print("----------------------- BATCH START -----------------------")
+        for token_input_ids, token_type_ids, attention_mask, sequence_labels, is_wordpiece_mask in zip(*batch):
+            token_input_ids = token_input_ids.tolist()
+            print('tokens:', [tokenizer.decode(t) for t in token_input_ids])
+            print('sequence_labels:', sequence_labels.numpy().tolist())
+            print('is_wordpiece_mask:', is_wordpiece_mask.numpy().tolist())
+
+            print("="*20)
+            print(f"len: {len(token_input_ids)}", tokenizer.decode(token_input_ids, skip_special_tokens=False))
+
+
+if __name__ == "__main__":
+    run_dataset()
