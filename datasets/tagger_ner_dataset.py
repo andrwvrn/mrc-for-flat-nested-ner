@@ -13,7 +13,6 @@ from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer
 
 
-
 def get_labels(data_sign: str) -> List[str]:
     """
     Returns list of labels for a given dataset
