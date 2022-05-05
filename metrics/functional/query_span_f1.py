@@ -5,33 +5,61 @@
 
 import torch
 import numpy as np
+
+from typing import List, Sequence, Tuple
+
 from utils.bmes_decode import bmes_decode
 
 
-def query_span_f1(start_preds, end_preds, match_logits, start_label_mask, end_label_mask, match_labels):
+def query_span_f1(start_preds: torch.Tensor,
+                  end_preds: torch.Tensor,
+                  match_logits: torch.Tensor,
+                  start_label_mask: torch.Tensor,
+                  end_label_mask: torch.Tensor,
+                  match_labels: torch.Tensor):
     """
     Calculates span f1 according to query-based model output
 
     Args:
-        start_preds: [bsz, seq_len]
-        end_preds: [bsz, seq_len]
-        match_logits: [bsz, seq_len, seq_len]
-        start_label_mask: [bsz, seq_len]
-        end_label_mask: [bsz, seq_len]
-        match_labels: [bsz, seq_len, seq_len]
+        start_preds: torch.Tensor
+            predictions of start token position,
+            shape `[batch_size, seq_len]`
+        end_preds: torch.Tensor
+            predictions of end token position,
+            shape `[batch_size, seq_len]`
+        match_logits: torch.Tensor
+            tensor which rows' numbers are start token positions and
+            which columns' numbers are end token positions, logit at
+            i-th row and j-th column will denote probability that predicted
+            entity starts at i-th token and ends at j-th token in a tokens
+            sequence,
+            shape `[batch_size, seq_len, seq_len]`
+        start_label_mask: torch.Tensor
+            tensor containing mask for start tokens, contains 1s for tokens
+            that are at the beginning of the word or include the whole word,
+            shape `[batch_size, seq_len]`
+        end_label_mask: torch.Tensor
+            tensor containing mask for end tokens, contains 1s for tokens
+            that are at the end of the word or include the whole word,
+            shape `[batch_size, seq_len]`
+        match_labels: torch.Tensor
+            tensor containing 1s on rows which numbers are start token
+            positions and on columns which numbers are end token positions,
+            shape `[batch_size, seq_len, seq_len]`
 
     Returns:
-        span-f1 counts, tensor of shape [3]: tp, fp, fn
+        : torch.Tensor
+            span-f1 counts, tensor of shape [3]: tp, fp, fn
     """
     start_label_mask = start_label_mask.bool()
     end_label_mask = end_label_mask.bool()
     match_labels = match_labels.bool()
     bsz, seq_len = start_label_mask.size()
-    # [bsz, seq_len, seq_len]
+    # [batch_size, seq_len, seq_len]
     match_preds = match_logits > 0
-    # [bsz, seq_len]
+    # [batch_size, seq_len]
     start_preds = start_preds.bool()
-    # [bsz, seq_len]
+    # [batch_size, seq_len]
     end_preds = end_preds.bool()
 
     match_preds = (match_preds &
@@ -51,7 +79,44 @@ def query_span_f1(start_preds, end_preds, match_logits, start_label_mask, end_la
     return torch.stack([tp, fp, fn])
 
 
-def extract_nested_spans(start_preds, end_preds, match_preds, start_label_mask, end_label_mask, pseudo_tag="TAG"):
+def extract_nested_spans(start_preds: torch.Tensor,
+                         end_preds: torch.Tensor,
+                         match_preds: torch.Tensor,
+                         start_label_mask: torch.Tensor,
+                         end_label_mask: torch.Tensor,
+                         pseudo_tag: str = "TAG"):
+    """
+    Calculates nested span f1
+
+    Args:
+        start_preds: torch.Tensor
+            predictions of start token position,
+            shape `[batch_size, seq_len]`
+        end_preds: torch.Tensor
+            predictions of end token position,
+            shape `[batch_size, seq_len]`
+        match_preds: torch.Tensor
+            tensor which rows' numbers are start token positions and
+            which columns' numbers are end token positions, logit at
+            i-th row and j-th column will denote probability that predicted
+            entity starts at i-th token and ends at j-th token in a tokens
+            sequence,
+            shape `[batch_size, seq_len, seq_len]`
+        start_label_mask: torch.Tensor
+            tensor containing mask for start tokens, contains 1s for tokens
+            that are at the beginning of the word or include the whole word,
+            shape `[batch_size, seq_len]`
+        end_label_mask: torch.Tensor
+            tensor containing mask for end tokens, contains 1s for tokens
+            that are at the end of the word or include the whole word,
+            shape `[batch_size, seq_len]`
+        pseudo_tag: str
+            dummy tag
+
+    Returns:
+        : List[Tuple[int, int, str]]
+            list of tuples (start, end, tag)
+    """
     start_label_mask = start_label_mask.bool()
     end_label_mask = end_label_mask.bool()
 
@@ -74,18 +139,38 @@ def extract_nested_spans(start_preds, end_preds, match_preds, start_label_mask, 
     return [(pos[1], pos[2], pseudo_tag) for pos in match_pos_pairs]
 
 
-def extract_flat_spans(start_pred, end_pred, match_pred, label_mask, pseudo_tag = "TAG"):
+def extract_flat_spans(start_pred: Sequence[int],
+                       end_pred: Sequence[int],
+                       match_pred: Sequence[Sequence[int]],
+                       label_mask: Sequence[int],
+                       pseudo_tag: str = "TAG") -> List[Tuple[int, int, str]]:
     """
-    Extract flat-ner spans from start/end/match logits
+    Extract flat-ner spans
 
     Args:
-        start_pred: [seq_len], 1/True for start, 0/False for non-start
-        end_pred: [seq_len, 2], 1/True for end, 0/False for non-end
-        match_pred: [seq_len, seq_len], 1/True for match, 0/False for non-match
-        label_mask: [seq_len], 1 for valid boundary.
+        start_pred: Sequence[int]
+            predictions of start token positions,
+            1/True for start, 0/False for non-start,
+            shape `[seq_len]`
+        end_pred: Sequence[int]
+            predictions of end token position,
+            1/True for end, 0/False for non-end,
+            shape `[seq_len]`
+        match_pred: Sequence[Sequence[int]]
+            2D sequence which rows' numbers are start token positions and
+            which columns' numbers are end token positions,
+            1/True at i-th row and j-th column means that predicted
+            entity starts at i-th token and ends at j-th token
+            shape `[seq_len, seq_len]`
+        label_mask: Sequence[int]
+            attention mask containing 1s for valid boundary,
+            shape `[seq_len]`
+        pseudo_tag: str
+            dummy tag
 
     Returns:
-        tags: list of tuple (start, end)
+        tags: List[Tuple[int, int, str]]
+            list of tuples (start, end, tag)
 
     Examples:
         >> start_pred = [0, 1]
@@ -124,24 +209,26 @@ def extract_flat_spans(start_pred, end_pred, match_pred, label_mask, pseudo_tag 
     return [(entity.begin, entity.end, entity.tag) for entity in tags]
 
 
-def remove_overlap(spans):
+def remove_overlap(spans: List[Tuple[int, int, str]]) -> List[Tuple[int, int, str]]:
     """
     Removes overlapped spans greedily for flat-ner
 
     Args:
-        spans: list of tuples (start, end), which means [start, end] is a ner-span
+        spans: List[Tuple[int, int, str]]
+            list of tuples (start, end, tag)
 
     Returns:
-        spans without overlap
+        output: List[Tuple[int, int, str]]
+            spans without overlap
     """
     output = []
     occupied = set()
 
-    for start, end in spans:
-        if any(x for x in range(start, end+1)) in occupied:
+    for start, end, tag in spans:
+        if any(x in occupied for x in range(start, end+1)):
             continue
-        output.append((start, end))
-        for x in range(start, end + 1):
+        output.append((start, end, tag))
+        for x in range(start, end+1):
             occupied.add(x)
 
     return output
