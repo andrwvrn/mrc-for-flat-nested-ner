@@ -9,6 +9,8 @@ import os
 
 import torch
 
+from typing import List
+
 from tokenizers import BertWordPieceTokenizer
 from torch.utils.data import DataLoader, Dataset
 
@@ -50,10 +52,10 @@ class MRCNERDataset(Dataset):
         self.is_chinese = is_chinese
         self.pad_to_maxlen = pad_to_maxlen
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.all_data)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int) -> List[torch.Tensor]:
         """
         Args:
             item: int
