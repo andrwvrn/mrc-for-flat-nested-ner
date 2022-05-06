@@ -27,7 +27,8 @@ class MRCNERDataset(Dataset):
         max_length: int
             max length of query+context
         possible_only: bool
-            if True, only use possible samples that contain answer for the query/context
+            if True, only use possible samples that contain answer for
+            the query/context
         is_chinese: bool
             is chinese dataset
     """
