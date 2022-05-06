@@ -18,15 +18,21 @@ from datasets.collate_functions import collate_to_max_length
 class MRCNERDataset(Dataset):
     """
     MRC NER Dataset
+
     Args:
-        json_path: path to mrc-ner style json
+        json_path: str
+            path to mrc-ner style json
         tokenizer: BertTokenizer
-        max_length: int, max length of query+context
-        possible_only: if True, only use possible samples that contain answer for the query/context
-        is_chinese: is chinese dataset
+            tokenizer object
+        max_length: int
+            max length of query+context
+        possible_only: bool
+            if True, only use possible samples that contain answer for the query/context
+        is_chinese: bool
+            is chinese dataset
     """
     def __init__(self,
-                 json_path,
+                 json_path: str,
                  tokenizer: BertWordPieceTokenizer,
                  max_length: int = 512,
                  possible_only: bool = False,
@@ -49,16 +55,32 @@ class MRCNERDataset(Dataset):
     def __getitem__(self, item):
         """
         Args:
-            item: int, idx
+            item: int
+                item idx
+
         Returns:
-            tokens: tokens of query + context, [seq_len]
-            token_type_ids: token type ids, 0 for query, 1 for context, [seq_len]
-            start_labels: start labels of NER in tokens, [seq_len]
-            end_labels: end labels of NER in tokens, [seq_len]
-            label_mask: label mask, 1 for counting into loss, 0 for ignoring. [seq_len]
-            match_labels: match labels, [seq_len, seq_len]
-            sample_idx: sample id
-            label_idx: label id
+            tokens: torch.Tensor
+                tokens of query + context,
+                shape `[seq_len]`
+            token_type_ids: torch.Tensor
+                token type ids, 0 for query, 1 for context,
+                shape `[seq_len]`
+            start_labels: torch.Tensor
+                start labels of NER in tokens,
+                shape `[seq_len]`
+            end_labels: torch.Tensor
+                end labels of NER in tokens,
+                shape `[seq_len]`
+            label_mask: torch.Tensor
+                label mask, 1 for counting into loss, 0 for ignoring,
+                shape `[seq_len]`
+            match_labels: torch.Tensor
+                match labels,
+                shape `[seq_len, seq_len]`
+            sample_idx: torch.Tensor
+                sample id
+            label_idx: torch.Tensor
+                label id
         """
         data = self.all_data[item]
         tokenizer = self.tokenizer
@@ -178,7 +200,9 @@ class MRCNERDataset(Dataset):
 
 
 def run_dataset():
-    """test dataset"""
+    """
+    Read dataset and print batches
+    """
     parser = argparse.ArgumentParser(description="run mrc ner dataset")
     parser.add_argument("--bert_path", type=str, required=True)
     parser.add_argument("--input_path", type=str, required=True)
