@@ -95,7 +95,7 @@ def evaluate(args_list=None):
 
         subtokens_idx_lst = tokens.numpy().tolist()[0]
         subtokens_lst = [idx2tokens[item] for item in subtokens_idx_lst]
-        label_cate = query2label_dict[label_idx.item()]
+        label_cate = query2label_dict.get(label_idx.item(), 'pseudo_tag')
         readable_input_str = data_tokenizer.decode(subtokens_idx_lst, skip_special_tokens=True)
 
         if args.flat_ner:
