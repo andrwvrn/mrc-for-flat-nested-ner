@@ -127,7 +127,7 @@ def evaluate(args_list=None):
             if len(entities_info) != 0:
                 for entity_info in entities_info:
                     start, end = entity_info[0], entity_info[1]
-                    entity_string = " ".join(subtokens_lst[start: end+1])
+                    entity_string = " ".join(subtokens_lst[start:end+1])
                     entity_string = entity_string.replace(" ##", "")
                     entity_lst.append((start, end+1, entity_string, entity_info[2]))
 
