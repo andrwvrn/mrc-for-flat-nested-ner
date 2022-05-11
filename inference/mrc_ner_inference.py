@@ -7,7 +7,7 @@ import os
 import torch
 import argparse
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 from torch.utils.data import DataLoader
 from utils.random_seed import set_random_seed
 set_random_seed(0)
@@ -91,7 +91,7 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def evaluate(args_list: List[str] = None):
+def evaluate(args_list: Optional[List[str]] = None):
     """
     Run evaluation
 
