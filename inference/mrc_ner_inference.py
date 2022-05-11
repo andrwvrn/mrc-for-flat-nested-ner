@@ -7,7 +7,7 @@ import os
 import torch
 import argparse
 
-from typing import Dict, Tuple, List
+from typing import Dict, List, Tuple
 from torch.utils.data import DataLoader
 from utils.random_seed import set_random_seed
 set_random_seed(0)
