@@ -252,11 +252,11 @@ def run_dataset():
             print("="*20)
             print(f"len: {len(tokens)}", tokenizer.decode(tokens, skip_special_tokens=False))
             for start, end in zip(start_positions, end_positions):
-                print(str(sample_idx.item()), str(label_idx.item()) + "\t" + tokenizer.decode(tokens[start: end+1]))
+                print(str(sample_idx.item()), str(label_idx.item()) + "\t" + tokenizer.decode(tokens[start:end+1]))
 
             print("!!!"*20)
             for start, end in zip(tmp_start_position, tmp_end_position):
-                print(str(sample_idx.item()), str(label_idx.item()) + "\t" + tokenizer.decode(tokens[start: end+1]))
+                print(str(sample_idx.item()), str(label_idx.item()) + "\t" + tokenizer.decode(tokens[start:end+1]))
 
 
 if __name__ == '__main__':
