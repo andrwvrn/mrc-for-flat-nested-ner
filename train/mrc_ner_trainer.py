@@ -8,10 +8,11 @@ import re
 import argparse
 import logging
 from collections import namedtuple
-from typing import Dict
+from typing import Any, Dict, Optional, List, Tuple
 
 import torch
 import pytorch_lightning as pl
+
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
 from tokenizers import BertWordPieceTokenizer
@@ -34,13 +35,12 @@ set_random_seed(0)
 
 
 class BertLabeling(pl.LightningModule):
-    def __init__(
-        self,
-        args: argparse.Namespace
-    ):
+    def __init__(self, args: argparse.Namespace):
         """Initialize a model, tokenizer and config."""
         super().__init__()
+
         frmt = '%(asctime)s - %(name)s - %(message)s'
+
         if isinstance(args, argparse.Namespace):
             self.save_hyperparameters(args)
             self.args = args
@@ -58,12 +58,13 @@ class BertLabeling(pl.LightningModule):
                                                          hidden_dropout_prob=args.bert_dropout,
                                                          attention_probs_dropout_prob=args.bert_dropout,
                                                          mrc_dropout=args.mrc_dropout,
-                                                         classifier_act_func = args.classifier_act_func,
+                                                         classifier_act_func=args.classifier_act_func,
                                                          classifier_intermediate_hidden_size=args.classifier_intermediate_hidden_size)
 
-        self.model = BertQueryNER.from_pretrained(args.bert_config_dir,
-                                                  config=bert_config)
+        self.model = BertQueryNER.from_pretrained(args.bert_config_dir, config=bert_config)
+
         logging.info(str(args.__dict__ if isinstance(args, argparse.ArgumentParser) else args))
+
         self.result_logger = logging.getLogger(__name__)
         self.result_logger.setLevel(logging.INFO)
         self.result_logger.info(str(args.__dict__ if isinstance(args, argparse.ArgumentParser) else args))
@@ -79,32 +80,35 @@ class BertLabeling(pl.LightningModule):
         self.span_loss_candidates = args.span_loss_candidates
 
     @staticmethod
-    def add_model_specific_args(parent_parser):
+    def add_model_specific_args(parent_parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument("--mrc_dropout", type=float, default=0.1,
-                            help="mrc dropout rate")
-        parser.add_argument("--bert_dropout", type=float, default=0.1,
-                            help="bert dropout rate")
+        parser.add_argument("--mrc_dropout", type=float, default=0.1, help="mrc dropout rate")
+        parser.add_argument("--bert_dropout", type=float, default=0.1, help="bert dropout rate")
         parser.add_argument("--classifier_act_func", type=str, default="gelu")
         parser.add_argument("--classifier_intermediate_hidden_size", type=int, default=1024)
         parser.add_argument("--weight_start", type=float, default=1.0)
         parser.add_argument("--weight_end", type=float, default=1.0)
         parser.add_argument("--weight_span", type=float, default=1.0)
-        parser.add_argument("--span_loss_candidates", choices=["all", "pred_and_gold", "pred_gold_random", "gold"],
-                            default="all", help="Candidates used to compute span loss")
-        parser.add_argument("--chinese", action="store_true",
-                            help="is chinese dataset")
-        parser.add_argument("--optimizer", choices=["adamw", "sgd", "torch.adam"], default="adamw",
-                            help="loss type")
-        parser.add_argument("--final_div_factor", type=float, default=1e4,
+        parser.add_argument("--span_loss_candidates",
+                            choices=["all", "pred_and_gold", "pred_gold_random", "gold"],
+                            default="all",
+                            help="Candidates used to compute span loss")
+        parser.add_argument("--chinese", action="store_true", help="is chinese dataset")
+        parser.add_argument("--optimizer", choices=["adamw", "sgd", "torch.adam"], default="adamw", help="loss type")
+        parser.add_argument("--final_div_factor",
+                            type=float,
+                            default=1e4,
                             help="final div factor of linear decay scheduler")
-        parser.add_argument("--lr_scheduler", type=str, default="onecycle", )
+        parser.add_argument("--lr_scheduler", type=str, default="onecycle")
         parser.add_argument("--lr_mini", type=float, default=-1)
         return parser
 
-    def configure_optimizers(self):
-        """Prepare optimizer and schedule (linear warmup and decay)"""
+    def configure_optimizers(self) -> Tuple[List[Any], List[Dict[str, Any]]]:
+        """
+        Prepare optimizer and schedule (linear warmup and decay)
+        """
         no_decay = ["bias", "LayerNorm.weight"]
+
         optimizer_grouped_parameters = [
             {
                 "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
@@ -115,6 +119,7 @@ class BertLabeling(pl.LightningModule):
                 "weight_decay": 0.0,
             },
         ]
+
         if self.optimizer == "adamw":
             optimizer = AdamW(optimizer_grouped_parameters,
                               betas=(0.9, 0.98),  # according to RoBERTa paper
@@ -127,37 +132,60 @@ class BertLabeling(pl.LightningModule):
                                           weight_decay=self.args.weight_decay)
         else:
             optimizer = SGD(optimizer_grouped_parameters, lr=self.args.lr, momentum=0.9)
+
         num_gpus = len([x for x in str(self.args.gpus).split(",") if x.strip()])
         t_total = (len(self.train_dataloader()) // (self.args.accumulate_grad_batches * num_gpus) + 1) * self.args.max_epochs
+
         if self.args.lr_scheduler == "onecycle":
             scheduler = torch.optim.lr_scheduler.OneCycleLR(
-                optimizer, max_lr=self.args.lr, pct_start=float(self.args.warmup_steps/t_total),
+                optimizer,
+                max_lr=self.args.lr,
+                pct_start=float(self.args.warmup_steps/t_total),
                 final_div_factor=self.args.final_div_factor,
-                total_steps=t_total, anneal_strategy='linear'
+                total_steps=t_total,
+                anneal_strategy='linear'
             )
         elif self.args.lr_scheduler == "linear":
-            scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=self.args.warmup_steps, num_training_steps=t_total)
+            scheduler = get_linear_schedule_with_warmup(optimizer,
+                                                        num_warmup_steps=self.args.warmup_steps,
+                                                        num_training_steps=t_total)
         elif self.args.lr_scheduler == "polydecay":
             if self.args.lr_mini == -1:
                 lr_mini = self.args.lr / 5
             else:
                 lr_mini = self.args.lr_mini
-            scheduler = get_polynomial_decay_schedule_with_warmup(optimizer, self.args.warmup_steps, t_total, lr_end=lr_mini)
+            scheduler = get_polynomial_decay_schedule_with_warmup(optimizer,
+                                                                  self.args.warmup_steps,
+                                                                  t_total,
+                                                                  lr_end=lr_mini)
         else:
             raise ValueError
+
         return [optimizer], [{"scheduler": scheduler, "interval": "step"}]
 
-    def forward(self, input_ids, attention_mask, token_type_ids):
+    def forward(self,
+                input_ids: torch.Tensor,
+                attention_mask: torch.Tensor,
+                token_type_ids: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         return self.model(input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)
 
-    def compute_loss(self, start_logits, end_logits, span_logits,
-                     start_labels, end_labels, match_labels, start_label_mask, end_label_mask):
+    def compute_loss(self,
+                     start_logits: torch.Tensor,
+                     end_logits: torch.Tensor,
+                     span_logits: torch.Tensor,
+                     start_labels: torch.Tensor,
+                     end_labels: torch.Tensor,
+                     match_labels: torch.Tensor,
+                     start_label_mask: torch.Tensor,
+                     end_label_mask: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         batch_size, seq_len = start_logits.size()
 
         start_float_label_mask = start_label_mask.view(-1).float()
         end_float_label_mask = end_label_mask.view(-1).float()
+
         match_label_row_mask = start_label_mask.bool().unsqueeze(-1).expand(-1, -1, seq_len)
         match_label_col_mask = end_label_mask.bool().unsqueeze(-2).expand(-1, seq_len, -1)
+
         match_label_mask = match_label_row_mask & match_label_col_mask
         match_label_mask = torch.triu(match_label_mask, 0)  # start should be less equal to end
 
@@ -198,15 +226,17 @@ class BertLabeling(pl.LightningModule):
 
         start_loss = self.bce_loss(start_logits.view(-1), start_labels.view(-1).float())
         start_loss = (start_loss * start_float_label_mask).sum() / start_float_label_mask.sum()
+
         end_loss = self.bce_loss(end_logits.view(-1), end_labels.view(-1).float())
         end_loss = (end_loss * end_float_label_mask).sum() / end_float_label_mask.sum()
+
         match_loss = self.bce_loss(span_logits.view(batch_size, -1), match_labels.view(batch_size, -1).float())
         match_loss = match_loss * float_match_label_mask
         match_loss = match_loss.sum() / (float_match_label_mask.sum() + 1e-10)
 
         return start_loss, end_loss, match_loss
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch: List[torch.Tensor], batch_idx: int) -> Dict[str, Any]:
         tf_board_logs = {
             "lr": self.trainer.optimizers[0].param_groups[0]['lr']
         }
@@ -235,7 +265,7 @@ class BertLabeling(pl.LightningModule):
 
         return {'loss': total_loss, 'log': tf_board_logs}
 
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch: List[torch.Tensor], batch_idx: int) -> Dict[str, torch.Tensor]:
         output = {}
         tokens, token_type_ids, start_labels, end_labels, start_label_mask, end_label_mask, match_labels, sample_idx, label_idx = batch
 
@@ -270,24 +300,27 @@ class BertLabeling(pl.LightningModule):
 
         return output
 
-    def validation_epoch_end(self, outputs):
+    def validation_epoch_end(self, outputs: List[Dict[str, torch.Tensor]]) -> Dict[str, Any]:
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
         tensorboard_logs = {'val_loss': avg_loss}
 
         all_counts = torch.stack([x[f'span_f1_stats'] for x in outputs]).view(-1, 3).sum(0)
         span_tp, span_fp, span_fn = all_counts
+
         span_recall = span_tp / (span_tp + span_fn + 1e-10)
         span_precision = span_tp / (span_tp + span_fp + 1e-10)
         span_f1 = span_precision * span_recall * 2 / (span_recall + span_precision + 1e-10)
+
         tensorboard_logs[f"span_precision"] = span_precision
         tensorboard_logs[f"span_recall"] = span_recall
         tensorboard_logs[f"span_f1"] = span_f1
+
         self.result_logger.info(f"EVAL INFO -> current_epoch is: {self.trainer.current_epoch}, current_global_step is: {self.trainer.global_step} ")
         self.result_logger.info(f"EVAL INFO -> valid_f1 is: {span_f1}; precision: {span_precision}, recall: {span_recall}.")
 
         return {'val_loss': avg_loss, 'log': tensorboard_logs}
 
-    def test_step(self, batch, batch_idx):
+    def test_step(self, batch: List[torch.Tensor], batch_idx: int) -> Dict[str, torch.Tensor]:
         output = {}
         tokens, token_type_ids, start_labels, end_labels, start_label_mask, end_label_mask, match_labels, sample_idx, label_idx = batch
 
@@ -307,16 +340,20 @@ class BertLabeling(pl.LightningModule):
 
         return output
 
-    def test_epoch_end(self, outputs) -> Dict[str, Dict[str, Tensor]]:
+    def test_epoch_end(self, outputs: List[Dict[str, torch.Tensor]]) -> Dict[str, Dict[str, Tensor]]:
         tensorboard_logs = {}
 
         all_counts = torch.stack([x[f'span_f1_stats'] for x in outputs]).view(-1, 3).sum(0)
         span_tp, span_fp, span_fn = all_counts
+
         span_recall = span_tp / (span_tp + span_fn + 1e-10)
         span_precision = span_tp / (span_tp + span_fp + 1e-10)
         span_f1 = span_precision * span_recall * 2 / (span_recall + span_precision + 1e-10)
+
         print(f"TEST INFO -> test_f1 is: {span_f1} precision: {span_precision}, recall: {span_recall}")
+
         self.result_logger.info(f"TEST INFO -> test_f1 is: {span_f1} precision: {span_precision}, recall: {span_recall}")
+
         return {'log': tensorboard_logs}
 
     def train_dataloader(self) -> DataLoader:
@@ -328,13 +365,10 @@ class BertLabeling(pl.LightningModule):
     def test_dataloader(self) -> DataLoader:
         return self.get_dataloader("test")
 
-    def get_dataloader(self, prefix="train", limit: int = None) -> DataLoader:
-        """get training dataloader"""
-        """
-        load_mmap_dataset
-        """
+    def get_dataloader(self, prefix: str = "train", limit: Optional[int] = None) -> DataLoader:
         json_path = os.path.join(self.data_dir, f"mrc-ner.{prefix}")
         vocab_path = os.path.join(self.bert_dir, "vocab.txt")
+
         dataset = MRCNERDataset(json_path=json_path,
                                 tokenizer=BertWordPieceTokenizer(vocab_path),
                                 max_length=self.args.max_length,
@@ -358,26 +392,30 @@ class BertLabeling(pl.LightningModule):
 
 def find_best_checkpoint_on_dev(output_dir: str,
                                 log_file: str = "eval_result_log.txt",
-                                only_keep_the_best_ckpt: bool = False):
+                                only_keep_the_best_ckpt: bool = False) -> Tuple[float, str]:
     with open(os.path.join(output_dir, log_file)) as f:
         log_lines = f.readlines()
 
     F1_PATTERN = re.compile(r"span_f1 reached \d+\.\d* \(best")
-    # val_f1 reached 0.00000 (best 0.00000)
     CKPT_PATTERN = re.compile(r"saving model to \S+ as top")
+
     checkpoint_info_lines = []
+
     for log_line in log_lines:
         if "saving model to" in log_line:
             checkpoint_info_lines.append(log_line)
 
     # example of log line
-    # Epoch 00000: val_f1 reached 0.00000 (best 0.00000), saving model
+    # Epoch 00000: span_f1 reached 0.00000 (best 0.00000), saving model
     # to /data/xiaoya/outputs/0117/debug_5_12_2e-5_0.001_0.001_275_0.1_1_0.25/checkpoint/epoch=0.ckpt as top 20
     best_f1_on_dev = 0
     best_checkpoint_on_dev = ""
+
     for checkpoint_info_line in checkpoint_info_lines:
         current_f1 = float(
-            re.findall(F1_PATTERN, checkpoint_info_line)[0].replace("span_f1 reached ", "").replace(" (best", ""))
+            re.findall(F1_PATTERN, checkpoint_info_line)[0].replace("span_f1 reached ", "").replace(" (best", "")
+        )
+
         current_ckpt = re.findall(CKPT_PATTERN, checkpoint_info_line)[0].replace("saving model to ", "").replace(
             " as top", "")
 
@@ -390,8 +428,7 @@ def find_best_checkpoint_on_dev(output_dir: str,
     return best_f1_on_dev, best_checkpoint_on_dev
 
 
-def train(args_list=None):
-    """main"""
+def train(args_list: Optional[List[str]] = None):
     parser = get_parser()
 
     # add model specific args
@@ -431,11 +468,15 @@ def train(args_list=None):
     # after training, use the model checkpoint which achieves the best f1 score
     # on dev set to compute the f1 on test set.
     best_f1_on_dev, path_to_best_checkpoint = find_best_checkpoint_on_dev(args.default_root_dir, )
+
     model.result_logger.info("=&" * 20)
+
     model.result_logger.info(f"Best F1 on DEV is {best_f1_on_dev}")
     model.result_logger.info(f"Best checkpoint on DEV set is {path_to_best_checkpoint}")
+
     checkpoint = torch.load(path_to_best_checkpoint)
     model.load_state_dict(checkpoint['state_dict'])
+
     model.result_logger.info("=&" * 20)
 
 
