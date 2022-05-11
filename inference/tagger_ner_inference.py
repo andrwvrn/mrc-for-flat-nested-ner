@@ -6,6 +6,8 @@
 import os
 import argparse
 
+from typing import List, Tuple
+
 from torch.utils.data import DataLoader
 from utils.random_seed import set_random_seed
 
@@ -18,7 +20,20 @@ from train.bert_tagger_trainer import BertSequenceLabeling
 from transformers import AutoTokenizer
 
 
-def get_dataloader(config, data_prefix="test"):
+def get_dataloader(config: argparse.Namespace, data_prefix: str = "test") -> Tuple[DataLoader, AutoTokenizer]:
+    """
+    Returns dataloader and tokenizer
+
+    Args:
+        config: argparse.Namespace
+            config containing user-defined params
+        data_prefix: str
+            what part of dataset to load
+
+    Returns:
+        : Tuple[DataLoader, BertWordPieceTokenizer]
+            tuple with dataloader and tokenizer
+    """
     data_path = os.path.join(config.data_dir, f"{data_prefix}{config.data_file_suffix}")
     data_tokenizer = AutoTokenizer.from_pretrained(config.bert_dir, use_fast=False, do_lower_case=config.do_lowercase)
 
@@ -34,6 +49,13 @@ def get_dataloader(config, data_prefix="test"):
 
 
 def get_parser() -> argparse.ArgumentParser:
+    """
+    Returns arguments parser
+
+    Returns:
+        parser: argparse.ArgumentParser
+            arguments parser
+    """
     parser = argparse.ArgumentParser(description="inference the model output.")
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--bert_dir", type=str, required=True)
@@ -51,7 +73,14 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def evaluate(args_list=None):
+def evaluate(args_list: List[str] = None):
+    """
+    Run evaluation
+
+    Args:
+        args_list: List[str]
+            list of arguments
+    """
     parser = get_parser()
     if args_list:
         args = parser.parse_args(args_list)
@@ -129,6 +158,9 @@ def evaluate(args_list=None):
 
 
 def main():
+    """
+    Run evaluation
+    """
     evaluate()
 
 

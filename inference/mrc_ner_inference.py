@@ -178,6 +178,9 @@ def evaluate(args_list: List[str] = None):
 
 
 def main():
+    """
+    Run evaluation
+    """
     evaluate()
 
 
