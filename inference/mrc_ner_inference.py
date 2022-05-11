@@ -6,6 +6,8 @@
 import os
 import torch
 import argparse
+
+from typing import Dict, Tuple, List
 from torch.utils.data import DataLoader
 from utils.random_seed import set_random_seed
 set_random_seed(0)
@@ -16,7 +18,20 @@ from datasets.mrc_ner_dataset import MRCNERDataset
 from metrics.functional.query_span_f1 import extract_flat_spans, extract_nested_spans
 
 
-def get_dataloader(config, data_prefix="test"):
+def get_dataloader(config: argparse.Namespace, data_prefix: str = "test") -> Tuple[DataLoader, BertWordPieceTokenizer]:
+    """
+    Returns dataloader and tokenizer
+
+    Args:
+        config: argparse.Namespace
+            config containing user-defined params
+        data_prefix: str
+            what part of dataset to load
+
+    Returns:
+        : Tuple[DataLoader, BertWordPieceTokenizer]
+            tuple with dataloader and tokenizer
+    """
     data_path = os.path.join(config.data_dir, f"mrc-ner.{data_prefix}")
     vocab_path = os.path.join(config.bert_dir, "vocab.txt")
     data_tokenizer = BertWordPieceTokenizer(vocab_path)
@@ -32,7 +47,18 @@ def get_dataloader(config, data_prefix="test"):
     return dataloader, data_tokenizer
 
 
-def get_query_index_to_label_cate(dataset_sign):
+def get_query_index_to_label_cate(dataset_sign: str) -> Dict[int, str]:
+    """
+    Returns dictionary with mapping between labels' ids and labels
+
+    Args:
+        dataset_sign: str
+            dataset name
+
+    Returns:
+        : Dict[int, str]
+            mapping between labels' ids and labels
+    """
     # NOTICE: need change if you use other datasets.
     # please notice it should in line with the mrc-ner.test/train/dev json file
     if dataset_sign == "conll03":
@@ -42,6 +68,13 @@ def get_query_index_to_label_cate(dataset_sign):
 
 
 def get_parser() -> argparse.ArgumentParser:
+    """
+    Returns arguments parser
+
+    Returns:
+        parser: argparse.ArgumentParser
+            arguments parser
+    """
     parser = argparse.ArgumentParser(description="inference the model output.")
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--bert_dir", type=str, required=True)
@@ -58,7 +91,14 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def evaluate(args_list=None):
+def evaluate(args_list: List[str] = None):
+    """
+    Run evaluation
+
+    Args:
+        args_list: List[str]
+            list of arguments
+    """
     parser = get_parser()
     if args_list:
         args = parser.parse_args(args_list)
