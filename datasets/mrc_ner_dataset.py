@@ -208,13 +208,13 @@ def run_dataset():
     """
     parser = argparse.ArgumentParser(description="run mrc ner dataset")
     parser.add_argument("--bert_path", type=str, required=True)
-    parser.add_argument("--input_path", type=str, required=True)
+    parser.add_argument("--dataset_path", type=str, required=True)
     parser.add_argument("--is_chinese", action="store_true")
 
     args = parser.parse_args()
 
     bert_path = args.bert_path
-    json_path = args.input_path
+    json_path = args.dataset_path
     is_chinese = args.is_chinese
 
     vocab_file = os.path.join(bert_path, "vocab.txt")
