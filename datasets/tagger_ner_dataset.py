@@ -137,7 +137,33 @@ class TaggerNERDataset(Dataset):
     def __len__(self):
         return len(self.all_data)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int) -> List[torch.Tensor]:
+        """
+        Args:
+            item: int
+                item idx
+
+        Returns:
+            wordpiece_token_lst: torch.Tensor
+                tokens of context,
+                shape `[seq_len]`
+            token_type_ids: torch.Tensor
+                token type ids,
+                shape `[seq_len]`
+            attention_mask: torch.Tensor
+                attention mask for tokens,
+                shape `[seq_len]`
+            wordpiece_label_idx_lst: torch.Tensor
+                contains labels' indices for tokens at the beginning of the
+                words, -100 for tokens in the middle of the words and also for
+                [SEP] and [CLS] tokens,
+                shape `[seq_len]`
+            is_wordpiece_mask: torch.Tensor
+                mask containing 1 for tokens at the beginning of the words,
+                -100 for tokens in the middle of the words and also for [SEP]
+                and [CLS] tokens,
+                shape `[seq_len, seq_len]`
+        """
         data = self.all_data[item]
         token_lst, label_lst = tuple(data)
         wordpiece_token_lst, wordpiece_label_lst = [], []
@@ -179,6 +205,9 @@ class TaggerNERDataset(Dataset):
 
 
 def run_dataset():
+    """
+    Read dataset and print batches
+    """
     parser = argparse.ArgumentParser(description="run tagger ner dataset")
     parser.add_argument("--bert_path", type=str, required=True)
     parser.add_argument("--dataset_path", type=str, required=True)
