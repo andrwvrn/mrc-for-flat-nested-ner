@@ -22,7 +22,7 @@ def transform_predictions_to_labels(sequence_input_lst: torch.Tensor,
             for 'label' input type, [batch_size, seq_len, num_labels] otherwise
         wordpiece_mask: torch.Tensor, shape [batch_size, seq_len]
             tensor containing mask with 1 for tokens that are the first part of
-            tokenized word and 0 for other tokens
+            tokenized word and -100 for other tokens
         idx2label_map: Dict[int, str]
             mapping from tokens' indices in vocab to tokens
         input_type: str
