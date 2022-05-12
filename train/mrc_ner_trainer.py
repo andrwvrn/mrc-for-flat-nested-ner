@@ -16,7 +16,7 @@ import pytorch_lightning as pl
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
 from tokenizers import BertWordPieceTokenizer
-from torch import Tensor
+
 from torch.nn.modules import CrossEntropyLoss, BCEWithLogitsLoss
 from torch.utils.data import DataLoader
 from transformers import AdamW, get_linear_schedule_with_warmup, get_polynomial_decay_schedule_with_warmup
@@ -315,8 +315,10 @@ class BertLabeling(pl.LightningModule):
         tensorboard_logs[f"span_recall"] = span_recall
         tensorboard_logs[f"span_f1"] = span_f1
 
-        self.result_logger.info(f"EVAL INFO -> current_epoch is: {self.trainer.current_epoch}, current_global_step is: {self.trainer.global_step} ")
-        self.result_logger.info(f"EVAL INFO -> valid_f1 is: {span_f1}; precision: {span_precision}, recall: {span_recall}.")
+        self.result_logger.info(f"EVAL INFO -> current_epoch is: {self.trainer.current_epoch}, "
+                                f"current_global_step is: {self.trainer.global_step} ")
+        self.result_logger.info(f"EVAL INFO -> valid_f1 is: {span_f1}; precision: {span_precision}, "
+                                f"recall: {span_recall}.")
 
         return {'val_loss': avg_loss, 'log': tensorboard_logs}
 
@@ -340,7 +342,7 @@ class BertLabeling(pl.LightningModule):
 
         return output
 
-    def test_epoch_end(self, outputs: List[Dict[str, torch.Tensor]]) -> Dict[str, Dict[str, Tensor]]:
+    def test_epoch_end(self, outputs: List[Dict[str, torch.Tensor]]) -> Dict[str, Dict[str, torch.Tensor]]:
         tensorboard_logs = {}
 
         all_counts = torch.stack([x[f'span_f1_stats'] for x in outputs]).view(-1, 3).sum(0)
@@ -352,7 +354,8 @@ class BertLabeling(pl.LightningModule):
 
         print(f"TEST INFO -> test_f1 is: {span_f1} precision: {span_precision}, recall: {span_recall}")
 
-        self.result_logger.info(f"TEST INFO -> test_f1 is: {span_f1} precision: {span_precision}, recall: {span_recall}")
+        self.result_logger.info(f"TEST INFO -> test_f1 is: {span_f1} precision: {span_precision}, "
+                                f"recall: {span_recall}")
 
         return {'log': tensorboard_logs}
 
@@ -391,8 +394,8 @@ class BertLabeling(pl.LightningModule):
 
 
 def find_best_checkpoint_on_dev(output_dir: str,
-                                log_file: str = "eval_result_log.txt",
-                                only_keep_the_best_ckpt: bool = False) -> Tuple[float, str]:
+                                log_file: Optional[str] = "eval_result_log.txt",
+                                only_keep_the_best_ckpt: Optional[bool] = False) -> Tuple[float, str]:
     with open(os.path.join(output_dir, log_file)) as f:
         log_lines = f.readlines()
 
