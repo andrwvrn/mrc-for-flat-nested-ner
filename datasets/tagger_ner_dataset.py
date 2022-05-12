@@ -22,7 +22,8 @@ def get_labels(data_sign: str) -> List[str]:
             name of the dataset
 
     Returns:
-        List of labels
+        : List[str]
+            List of labels
     """
     if data_sign == "zh_onto":
         return ["O", "S-GPE", "B-GPE", "M-GPE", "E-GPE",
