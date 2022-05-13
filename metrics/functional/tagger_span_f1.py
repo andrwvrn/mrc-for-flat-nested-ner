@@ -164,7 +164,7 @@ def get_entity_from_bmes_lst(label_list: List[Union[int, str]]) -> List[str]:
         >> ['[2,3]POS']
         >> label_list = ['O', 'S-PER', 'B-ORG', 'M-ORG', 'O']
         >> get_entity_from_bmes_lst(label_list)
-        >> ['[1]PER', '[2,4]ORG']
+        >> ['[1]PER', '[2]ORG']
     """
     list_len = len(label_list)
     begin_label = 'B-'
